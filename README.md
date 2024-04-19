@@ -1,6 +1,6 @@
 # f2clipboard
 
-`f2clipboard` is a Python utility that allows users to select files from a specified directory and copy their contents formatted in Markdown to the clipboard. This is especially useful for developers who need to quickly share file contents or for tasks that involve formatting file paths and contents for documentation or reporting.
+`f2clipboard` is a Python utility that allows users to select files from a specified directory and copy their contents formatted in Markdown to the clipboard.
 
 ## Installation
 
