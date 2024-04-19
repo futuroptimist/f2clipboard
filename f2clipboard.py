@@ -1,3 +1,4 @@
+import shutil
 import os
 import fnmatch
 import clipboard
@@ -25,23 +26,30 @@ def list_files(directory, pattern='*', ignore_patterns=[]):
                 yield filename
 
 def select_files(files):
-    """Display files and let the user select multiple files to add to the copy list using comma-separated input."""
+    """Display files in a multi-column format and let the user select files to add to the copy list."""
     selected_files = []
+    term_width = shutil.get_terminal_size().columns
+    max_filename_length = max(len(os.path.basename(file)) for file in files) + 5
+    files_per_row = term_width // max_filename_length
+
     print("\n🌟 Welcome to the File to Clipboard Wizard! 🌟")
     print("👉 Please select files to add to your copy list (type 'done' to finish):")
-    for idx, file in enumerate(files, 1):
-        print(f"{idx}. {file}")
+
+    for i, file in enumerate(files, 1):
+        file_display = f"{i}. {os.path.basename(file):<{max_filename_length}}"
+        end_char = '\n' if i % files_per_row == 0 or i == len(files) else ''
+        print(file_display, end=end_char)
 
     print("\n📝 You can enter multiple file numbers separated by commas (e.g., 1, 4, 5).")
-    
+
     while True:
-        choice = input("🔍 Enter file numbers to add, 'list' to review, or 'done' to finalize: ")
+        choice = input("\n🔍 Enter file numbers to add, 'list' to review, or 'done' to finalize: ")
         if choice.lower() == 'done':
             break
         elif choice.lower() == 'list':
             print("\n📋 Current copy list:")
             for file in selected_files:
-                print(file)
+                print(f"  {os.path.basename(file)}")
         else:
             try:
                 indices = [int(x.strip()) - 1 for x in choice.split(',') if x.strip().isdigit()]
@@ -59,6 +67,7 @@ def select_files(files):
                 print("❌ Please enter valid numbers separated by commas.")
 
     return selected_files
+
 
 
 def format_files_for_clipboard(files):
