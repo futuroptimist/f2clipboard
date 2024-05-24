@@ -68,11 +68,31 @@ def select_files(files):
 
     return selected_files
 
-
-
-def format_files_for_clipboard(files, directory):
+def format_files_for_clipboard(files, directory, ignore_patterns):
     """Format file paths and contents for clipboard in Markdown format."""
     result = "^^^\n"
+    
+    # Add checkbox section showing project structure and selected files
+    result += "## Project Structure\n\n"
+    for root, dirs, file_list in os.walk(directory):
+        dirs[:] = [d for d in dirs if not any(fnmatch.fnmatch(os.path.join(root, d), os.path.join(root, pat)) for pat in ignore_patterns)]
+        level = root.replace(directory, '').count(os.sep)
+        indent = ' ' * 4 * (level)
+        relative_root = os.path.relpath(root, directory)
+        if relative_root == '.':
+            result += f'{indent}- {os.path.basename(root)}\n'
+        else:
+            result += f'{indent}- {relative_root}\n'
+        subindent = ' ' * 4 * (level + 1)
+        for f in file_list:
+            relative_path = os.path.relpath(os.path.join(root, f), directory)
+            if not any(fnmatch.fnmatch(relative_path, pat) for pat in ignore_patterns):
+                if os.path.join(root, f) in files:
+                    result += f'{subindent}- [x] {f}\n'
+                else:
+                    result += f'{subindent}- [ ] {f}\n'
+    
+    result += "\n## Selected Files\n\n"
     for file in files:
         relative_path = os.path.relpath(file, directory)
         try:
@@ -86,7 +106,6 @@ def format_files_for_clipboard(files, directory):
     result += "^^^\n"
     return result
 
-
 def main():
     directory = input("📁 Enter the directory path to search files: ")
     pattern = input("🔎 Enter the file pattern to search (e.g., '*.txt'): ")
@@ -99,7 +118,7 @@ def main():
     selected_files = select_files(files)
     
     if selected_files:
-        clipboard_content = format_files_for_clipboard(selected_files, directory)
+        clipboard_content = format_files_for_clipboard(selected_files, directory, ignore_patterns)
         clipboard.copy(clipboard_content)
         print("🚀 The formatted files have been copied to your clipboard. Ready to paste!")
     else:
