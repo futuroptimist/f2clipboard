@@ -70,18 +70,19 @@ def select_files(files):
 
 
 
-def format_files_for_clipboard(files):
+def format_files_for_clipboard(files, directory):
     """Format file paths and contents for clipboard in Markdown format."""
     result = "^^^\n"
     for file in files:
+        relative_path = os.path.relpath(file, directory)
         try:
             with open(file, 'r', encoding='utf-8') as f:
                 content = f.read()
-            result += f"{os.path.basename(file)}:\n\n```\n{content}\n```\n\n"
+            result += f"{relative_path}:\n\n```\n{content}\n```\n\n"
         except UnicodeDecodeError:
-            result += f"{os.path.basename(file)}:\n\n```\n[ERROR: Could not decode file contents]\n```\n\n"
+            result += f"{relative_path}:\n\n```\n[ERROR: Could not decode file contents]\n```\n\n"
         except Exception as e:
-            result += f"{os.path.basename(file)}:\n\n```\n[ERROR: {e}]\n```\n\n"
+            result += f"{relative_path}:\n\n```\n[ERROR: {e}]\n```\n\n"
     result += "^^^\n"
     return result
 
@@ -98,7 +99,7 @@ def main():
     selected_files = select_files(files)
     
     if selected_files:
-        clipboard_content = format_files_for_clipboard(selected_files)
+        clipboard_content = format_files_for_clipboard(selected_files, directory)
         clipboard.copy(clipboard_content)
         print("🚀 The formatted files have been copied to your clipboard. Ready to paste!")
     else:
