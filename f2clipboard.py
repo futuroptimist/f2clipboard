@@ -3,6 +3,24 @@ import os
 import fnmatch
 import clipboard
 
+# Add common image and binary file extensions to exclude
+EXCLUDED_EXTENSIONS = {
+    # Images
+    '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp', '.ico', '.svg',
+    # Other binary files
+    '.pdf', '.zip', '.tar', '.gz', '.rar', '.7z',
+    # Video
+    '.mp4', '.avi', '.mov', '.wmv', '.flv', '.mkv',
+    # Audio
+    '.mp3', '.wav', '.ogg', '.m4a', '.flac',
+    # Font files
+    '.ttf', '.otf', '.woff', '.woff2',
+    # Binary executables
+    '.exe', '.dll', '.so', '.dylib',
+    # Design files
+    '.psd', '.ai', '.sketch'
+}
+
 def parse_gitignore(gitignore_path='.gitignore'):
     """Parse the .gitignore file and return a list of patterns, including '.git' always."""
     patterns = ['.git']  # Always ignore .git directory
@@ -16,24 +34,46 @@ def parse_gitignore(gitignore_path='.gitignore'):
                 patterns.append(stripped)
     return patterns
 
+def is_binary_or_image_file(filename):
+    """Check if the file has an excluded extension."""
+    return any(filename.lower().endswith(ext) for ext in EXCLUDED_EXTENSIONS)
+
 def list_files(directory, pattern='*', ignore_patterns=[]):
-    """Recursively list files in a directory matching the pattern, skipping ignored patterns."""
+    """Recursively list files in a directory matching the pattern, skipping ignored and binary/image files."""
     for root, dirs, files in os.walk(directory):
+        # Skip directories in ignore patterns
         dirs[:] = [d for d in dirs if not any(fnmatch.fnmatch(os.path.join(root, d), os.path.join(root, pat)) for pat in ignore_patterns)]
+        
         for basename in files:
             filename = os.path.join(root, basename)
-            if fnmatch.fnmatch(basename, pattern) and not any(fnmatch.fnmatch(filename, os.path.join(root, pat)) for pat in ignore_patterns):
+            
+            # Skip files that match ignore patterns
+            if any(fnmatch.fnmatch(filename, os.path.join(root, pat)) for pat in ignore_patterns):
+                continue
+                
+            # Skip binary/image files
+            if is_binary_or_image_file(basename):
+                continue
+                
+            # Only yield if the file matches the pattern
+            if fnmatch.fnmatch(basename, pattern):
                 yield filename
 
 def select_files(files):
     """Display files in a multi-column format and let the user select files to add to the copy list."""
+    files = list(files)  # Convert generator to list
+    if not files:
+        print("\n⚠️ No suitable files found. Note: Binary and image files are automatically excluded.")
+        return []
+        
     selected_files = []
     term_width = shutil.get_terminal_size().columns
     max_filename_length = max(len(os.path.basename(file)) for file in files) + 5
-    files_per_row = term_width // max_filename_length
+    files_per_row = max(1, term_width // max_filename_length)
 
     print("\n🌟 Welcome to the File to Clipboard Wizard! 🌟")
     print("👉 Please select files to add to your copy list (type 'done' to finish):")
+    print("📝 Note: Binary and image files are automatically excluded.")
 
     for i, file in enumerate(files, 1):
         file_display = f"{i}. {os.path.basename(file):<{max_filename_length}}"
@@ -80,11 +120,13 @@ def format_files_for_clipboard(files, directory, ignore_patterns):
         indent = ' ' * 4 * (level)
         relative_root = os.path.relpath(root, directory)
         if relative_root == '.':
-            result += f'{indent}- {os.path.basename(root)}\n'
+            result += f'{indent}- {os.path.basename(directory) or "."}\n'
         else:
             result += f'{indent}- {relative_root}\n'
         subindent = ' ' * 4 * (level + 1)
         for f in file_list:
+            if is_binary_or_image_file(f):
+                continue
             relative_path = os.path.relpath(os.path.join(root, f), directory)
             if not any(fnmatch.fnmatch(relative_path, pat) for pat in ignore_patterns):
                 if os.path.join(root, f) in files:
@@ -110,11 +152,7 @@ def main():
     directory = input("📁 Enter the directory path to search files: ")
     pattern = input("🔎 Enter the file pattern to search (e.g., '*.txt'): ")
     ignore_patterns = parse_gitignore()
-    files = list(list_files(directory, pattern, ignore_patterns))
-    if not files:
-        print("⚠️ No files found. Please check your directory/path or pattern.")
-        return
-    
+    files = list_files(directory, pattern, ignore_patterns)
     selected_files = select_files(files)
     
     if selected_files:
