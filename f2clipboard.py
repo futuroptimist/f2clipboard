@@ -38,8 +38,21 @@ def is_binary_or_image_file(filename):
     """Check if the file has an excluded extension."""
     return any(filename.lower().endswith(ext) for ext in EXCLUDED_EXTENSIONS)
 
+def expand_pattern(pattern):
+    """Expand brace patterns like *.{py,js} into a list of patterns like [*.py, *.js]."""
+    if '{' not in pattern or '}' not in pattern:
+        return [pattern]
+    
+    prefix = pattern[:pattern.find('{')]
+    suffix = pattern[pattern.find('}')+1:]
+    options = pattern[pattern.find('{')+1:pattern.find('}')].split(',')
+    return [f"{prefix}{opt}{suffix}" for opt in options]
+
 def list_files(directory, pattern='*', ignore_patterns=[]):
     """Recursively list files in a directory matching the pattern, skipping ignored and binary/image files."""
+    # Expand brace patterns into multiple patterns
+    patterns = expand_pattern(pattern)
+    
     for root, dirs, files in os.walk(directory):
         # Skip directories in ignore patterns
         dirs[:] = [d for d in dirs if not any(fnmatch.fnmatch(os.path.join(root, d), os.path.join(root, pat)) for pat in ignore_patterns)]
@@ -55,8 +68,8 @@ def list_files(directory, pattern='*', ignore_patterns=[]):
             if is_binary_or_image_file(basename):
                 continue
                 
-            # Only yield if the file matches the pattern
-            if fnmatch.fnmatch(basename, pattern):
+            # Match if the file matches any of the expanded patterns
+            if any(fnmatch.fnmatch(basename, pat) for pat in patterns):
                 yield filename
 
 def select_files(files):
@@ -150,7 +163,7 @@ def format_files_for_clipboard(files, directory, ignore_patterns):
 
 def main():
     directory = input("📁 Enter the directory path to search files: ")
-    pattern = input("🔎 Enter the file pattern to search (e.g., '*.txt'): ")
+    pattern = input("🔎 Enter the file pattern to search (examples: '*.txt', '*.{py,js}', 'test_*.py', '*config*'): ")
     ignore_patterns = parse_gitignore()
     files = list_files(directory, pattern, ignore_patterns)
     selected_files = select_files(files)
