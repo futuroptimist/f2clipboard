@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "f2clipboard"
+version = "0.1.0"
+description = "CLI utility to copy formatted files to the clipboard"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = ["clipboard"]
+
+[project.scripts]
+f2clipboard = "f2clipboard:main"
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"

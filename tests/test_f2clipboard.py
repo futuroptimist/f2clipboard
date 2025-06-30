@@ -1,7 +1,5 @@
 import pytest
 import os
-import tempfile
-import shutil
 from unittest.mock import patch, MagicMock
 from f2clipboard import (
     parse_gitignore,
@@ -10,37 +8,6 @@ from f2clipboard import (
     format_files_for_clipboard,
     EXCLUDED_EXTENSIONS,
 )
-
-
-@pytest.fixture
-def temp_directory():
-    """Create a temporary directory with test files."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # Create some test files
-        os.makedirs(os.path.join(tmpdir, "src"))
-        os.makedirs(os.path.join(tmpdir, "assets"))
-
-        # Create text files
-        with open(os.path.join(tmpdir, "file1.txt"), "w") as f:
-            f.write("test content 1")
-        with open(os.path.join(tmpdir, "src/file2.py"), "w") as f:
-            f.write("test content 2")
-        with open(os.path.join(tmpdir, "src/app.js"), "w") as f:
-            f.write("test content 3")
-        with open(os.path.join(tmpdir, "src/styles.css"), "w") as f:
-            f.write("test content 4")
-
-        # Create binary/image files
-        with open(os.path.join(tmpdir, "assets/test.jpg"), "wb") as f:
-            f.write(b"fake jpg content")
-        with open(os.path.join(tmpdir, "assets/icon.png"), "wb") as f:
-            f.write(b"fake png content")
-
-        # Create .gitignore
-        with open(os.path.join(tmpdir, ".gitignore"), "w") as f:
-            f.write("*.log\nnode_modules/\n")
-
-        yield tmpdir
 
 
 def test_parse_gitignore(temp_directory):
@@ -164,7 +131,7 @@ def test_main_workflow(mock_clipboard, mock_input, temp_directory):
 
     # Run main function
     with patch("sys.stdout"):  # Suppress print statements
-        main()
+        main([])
 
     # Verify clipboard was called
     assert mock_clipboard.called
@@ -190,7 +157,7 @@ def test_main_workflow_multi_pattern(mock_clipboard, mock_input, temp_directory)
 
     # Run main function
     with patch("sys.stdout"):  # Suppress print statements
-        main()
+        main([])
 
     # Verify clipboard was called and contains both types of files
     assert mock_clipboard.called

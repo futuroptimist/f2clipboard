@@ -3,12 +3,16 @@
 This project uses lightweight command line utilities to copy files into Markdown for LLM conversations. It may evolve into a workflow-based CLI, so clear instructions are important for contributors and future LLM agents.
 
 ## Overview
-- `f2clipboard.py` collects files from a chosen directory and copies their contents to the clipboard in a formatted block.
+- `f2clipboard.py` collects files from a chosen directory and copies their contents to the clipboard in a formatted block. The CLI supports:
+
+- `-d, --directory` – directory to search
+- `-p, --pattern` – glob pattern for files (default `*`)
+- `-y, --yes` – select all matching files without interactive prompts
 - See the [README](README.md) for installation and the project roadmap.
 
 ## Setup
 1. Ensure Python 3.x is installed.
-2. Install dependencies with `pip install clipboard`.
+2. Install dependencies with `pip install -e .` (installs `clipboard` and sets up the package for development).
 3. Optionally create a virtual environment for isolation.
 4. Check `llms.txt` for the list of approved LLMs.
 

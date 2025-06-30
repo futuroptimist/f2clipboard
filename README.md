@@ -12,6 +12,12 @@ Before running `f2clipboard`, install the required Python packages:
 pip install clipboard
 ```
 
+If developing locally, install the package in editable mode:
+
+```bash
+pip install -e .
+```
+
 ## Requirements
 
 - Python 3.x
@@ -50,6 +56,21 @@ To use `f2clipboard`, follow these steps:
    ```plaintext
    🔍 Enter file numbers to add, 'list' to review, or 'done' to finalize: done
    ```
+
+### Command Line Flags
+
+`f2clipboard` also supports non-interactive use. The following example selects
+all Python files under `src/` and copies them directly to your clipboard:
+
+```bash
+f2clipboard -d src -p '*.py' --yes
+```
+
+### Example: MCP Agent Workflow
+
+1. Run the command above to gather the files you want to discuss.
+2. Paste the output into your MCP agent (e.g., in a chat window).
+3. Ask the agent to analyze or transform the selected files.
 
 ## Known Limitations
 

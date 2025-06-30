@@ -1,6 +1,7 @@
-import shutil
-import os
+import argparse
 import fnmatch
+import os
+import shutil
 import clipboard
 
 # Add common image and binary file extensions to exclude
@@ -223,14 +224,48 @@ def format_files_for_clipboard(files, directory, ignore_patterns):
     return result
 
 
-def main():
-    directory = input("📁 Enter the directory path to search files: ")
-    pattern = input(
+def parse_args(args=None):
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Collect files and copy formatted Markdown to the clipboard"
+    )
+    parser.add_argument(
+        "-d",
+        "--directory",
+        help="Directory path to search. Defaults to interactive prompt",
+    )
+    parser.add_argument(
+        "-p",
+        "--pattern",
+        default="*",
+        help="File pattern to search, e.g. '*.txt' or '*.{py,js}'",
+    )
+    parser.add_argument(
+        "-y",
+        "--yes",
+        action="store_true",
+        help="Select all matching files without prompting",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version="%(prog)s 0.1.0",
+    )
+    return parser.parse_args(args)
+
+
+def main(argv=None):
+    args = parse_args(argv)
+    directory = args.directory or input("📁 Enter the directory path to search files: ")
+    pattern = args.pattern or input(
         "🔎 Enter the file pattern to search (examples: '*.txt', '*.{py,js}', 'test_*.py', '*config*'): "
     )
     ignore_patterns = parse_gitignore()
     files = list_files(directory, pattern, ignore_patterns)
-    selected_files = select_files(files)
+    if args.yes:
+        selected_files = list(files)
+    else:
+        selected_files = select_files(files)
 
     if selected_files:
         clipboard_content = format_files_for_clipboard(
