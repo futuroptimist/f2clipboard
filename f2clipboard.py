@@ -1,6 +1,7 @@
-import shutil
-import os
+import argparse
 import fnmatch
+import os
+import shutil
 import clipboard
 
 # Add common image and binary file extensions to exclude
@@ -223,11 +224,26 @@ def format_files_for_clipboard(files, directory, ignore_patterns):
     return result
 
 
-def main():
-    directory = input("📁 Enter the directory path to search files: ")
-    pattern = input(
-        "🔎 Enter the file pattern to search (examples: '*.txt', '*.{py,js}', 'test_*.py', '*config*'): "
+def build_parser():
+    parser = argparse.ArgumentParser(
+        description="Copy selected files to the clipboard in Markdown format."
     )
+    parser.add_argument(
+        "--dir",
+        default=".",
+        help="Directory to search for files (default: current directory)",
+    )
+    parser.add_argument(
+        "--pattern", default="*", help="File glob pattern to match (e.g. *.py or *.py)"
+    )
+    return parser
+
+
+def main(argv=None):
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    directory = args.dir
+    pattern = args.pattern
     ignore_patterns = parse_gitignore()
     files = list_files(directory, pattern, ignore_patterns)
     selected_files = select_files(files)

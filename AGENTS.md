@@ -3,7 +3,7 @@
 This project uses lightweight command line utilities to copy files into Markdown for LLM conversations. It may evolve into a workflow-based CLI, so clear instructions are important for contributors and future LLM agents.
 
 ## Overview
-- `f2clipboard.py` collects files from a chosen directory and copies their contents to the clipboard in a formatted block.
+- `f2clipboard.py` collects files from a chosen directory and copies their contents to the clipboard in a formatted block. Use the `--dir` and `--pattern` flags to specify inputs.
 - See the [README](README.md) for installation and the project roadmap.
 
 ## Setup

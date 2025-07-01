@@ -1,8 +1,7 @@
 import pytest
 import os
 import tempfile
-import shutil
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from f2clipboard import (
     parse_gitignore,
     is_binary_or_image_file,
@@ -151,20 +150,12 @@ def test_unicode_decode_error_handling(temp_directory):
 @patch("clipboard.copy")
 def test_main_workflow(mock_clipboard, mock_input, temp_directory):
     """Test the main workflow with mocked inputs."""
-    # Test with single pattern
-    mock_input.side_effect = [
-        temp_directory,  # directory path
-        "*.txt",  # file pattern
-        "1",  # select first file
-        "done",  # finish selection
-    ]
+    mock_input.side_effect = ["1", "done"]
 
-    # Import main function only when needed to avoid immediate execution
     from f2clipboard import main
 
-    # Run main function
-    with patch("sys.stdout"):  # Suppress print statements
-        main()
+    with patch("sys.stdout"):
+        main(["--dir", temp_directory, "--pattern", "*.txt"])
 
     # Verify clipboard was called
     assert mock_clipboard.called
@@ -177,20 +168,12 @@ def test_main_workflow(mock_clipboard, mock_input, temp_directory):
 @patch("clipboard.copy")
 def test_main_workflow_multi_pattern(mock_clipboard, mock_input, temp_directory):
     """Test the main workflow with multi-pattern input."""
-    # Test with multi-pattern
-    mock_input.side_effect = [
-        temp_directory,  # directory path
-        "*.{py,js}",  # file pattern for both Python and JavaScript files
-        "1,2",  # select both files
-        "done",  # finish selection
-    ]
+    mock_input.side_effect = ["1,2", "done"]
 
-    # Import main function only when needed to avoid immediate execution
     from f2clipboard import main
 
-    # Run main function
-    with patch("sys.stdout"):  # Suppress print statements
-        main()
+    with patch("sys.stdout"):
+        main(["--dir", temp_directory, "--pattern", "*.{py,js}"])
 
     # Verify clipboard was called and contains both types of files
     assert mock_clipboard.called
