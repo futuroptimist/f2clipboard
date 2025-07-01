@@ -1,0 +1,16 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: pip install -e .
+      - run: pip install pytest flake8 black clipboard
+      - run: black --check f2clipboard.py tests
+      - run: flake8
+      - run: pytest -q

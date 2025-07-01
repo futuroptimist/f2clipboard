@@ -6,10 +6,11 @@ This repository is intentionally minimal, but it reuses ideas from the [flywheel
 
 ## Installation
 
-Before running `f2clipboard`, install the required Python packages:
+Before running `f2clipboard`, install the package and its dependency:
 
 ```bash
 pip install clipboard
+pip install -e .
 ```
 
 ## Requirements
@@ -19,33 +20,21 @@ pip install clipboard
 
 ## Usage
 
-To use `f2clipboard`, follow these steps:
+Quick usage with the new flag-based interface:
 
-1. **Run the Script**: Navigate to the directory where `f2clipboard.py` is located and run:
+```bash
+python -m f2clipboard --dir path/to/project --pattern "*.py"
+```
 
-   ```bash
-   python f2clipboard.py
-   ```
+You'll then be prompted to choose which files to copy.
 
-2. **Enter Directory Path**: When prompted, enter the path to the directory you wish to search for files. You can enter `.` to denote the current directory:
-
-   ```plaintext
-   📁 Enter the directory path to search files: .
-   ```
-
-3. **Enter File Pattern**: Specify the pattern of the files you want to search (e.g., `*.txt`). If you want to search for all files, just enter `*`:
-
-   ```plaintext
-   🔎 Enter the file pattern to search (e.g., '*.txt'): *
-   ```
-
-4. **Select Files**: You will see a list of files. Enter the numbers of the files you want to add to your clipboard, separated by commas:
+1. **Select Files**: Enter the numbers of the files you want to add to your clipboard, separated by commas:
 
    ```plaintext
    🔍 Enter file numbers to add, 'list' to review, or 'done' to finalize: 1, 4, 5
    ```
 
-5. **Review and Finalize**: If you need to review your selection, type `list`. Once you are done selecting files, type `done` to copy the formatted content to the clipboard.
+2. **Review and Finalize**: If you need to review your selection, type `list`. Once you are done selecting files, type `done` to copy the formatted content to the clipboard.
 
    ```plaintext
    🔍 Enter file numbers to add, 'list' to review, or 'done' to finalize: done
