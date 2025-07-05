@@ -1,6 +1,7 @@
 # f2clipboard
 
-![Coverage](coverage.svg)
+[![CI](https://github.com/futuroptimist/f2clipboard/actions/workflows/ci.yml/badge.svg)](https://github.com/futuroptimist/f2clipboard/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/futuroptimist/f2clipboard/branch/main/graph/badge.svg)](https://codecov.io/gh/futuroptimist/f2clipboard)
 
 `f2clipboard` is a lightweight utility for copying multiple files into a single Markdown snippet. It started as a quick way to collect code for pasting into LLM conversations. The project now serves as a small sandbox for experimenting with command line tooling and automation.
 
