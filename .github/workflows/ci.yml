@@ -10,7 +10,12 @@ jobs:
         with:
           python-version: '3.x'
       - run: pip install -e .
-      - run: pip install pytest flake8 black clipboard
+      - run: pip install pytest flake8 black clipboard coverage pytest-cov
       - run: black --check f2clipboard.py tests
       - run: flake8
-      - run: pytest -q
+      - run: pytest --cov=f2clipboard --cov=tests -q
+      - run: coverage xml
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          fail_ci_if_error: true
