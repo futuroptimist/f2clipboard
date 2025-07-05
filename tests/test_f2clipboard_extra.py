@@ -64,6 +64,46 @@ def test_select_files_invalid_input(mock_input, mock_term_size, tmp_path):
     assert result == []
 
 
+@patch("shutil.get_terminal_size")
+@patch("builtins.input")
+def test_select_files_value_error(mock_input, mock_term_size, tmp_path):
+    """Trigger ValueError branch by patching int."""
+    mock_term_size.return_value = os.terminal_size((80, 24))
+    file1 = tmp_path / "c.txt"
+    file1.write_text("3")
+
+    class FakeToken:
+        def __init__(self, v):
+            self.v = v
+
+        def strip(self):
+            return self
+
+        def isdigit(self):
+            return True
+
+    class FakeInput:
+        def __init__(self, v):
+            self.v = v
+
+        def split(self, sep):
+            return [FakeToken(self.v)]
+
+        def lower(self):
+            return self.v
+
+    mock_input.side_effect = [FakeInput("bad"), "done"]
+
+    def fake_int(value):
+        raise ValueError
+
+    with patch("f2clipboard.int", side_effect=fake_int):
+        with patch("builtins.print") as mock_print:
+            result = select_files([str(file1)])
+    assert result == []
+    mock_print.assert_any_call("❌ Please enter valid numbers separated by commas.")
+
+
 def test_format_files_for_clipboard_exception(tmp_path):
     err_file = tmp_path / "err.txt"
     err_file.write_text("boom")
