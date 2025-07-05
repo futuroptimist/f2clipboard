@@ -1,5 +1,7 @@
 # f2clipboard
 
+![Coverage](coverage.svg)
+
 `f2clipboard` is a lightweight utility for copying multiple files into a single Markdown snippet. It started as a quick way to collect code for pasting into LLM conversations. The project now serves as a small sandbox for experimenting with command line tooling and automation.
 
 This repository is intentionally minimal, but it reuses ideas from the [flywheel](https://github.com/futuroptimist/flywheel) template. If you need a more robust project skeleton with CI workflows and agent documentation, check out flywheel.
