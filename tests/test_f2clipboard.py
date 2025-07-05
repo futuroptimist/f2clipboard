@@ -7,6 +7,7 @@ from f2clipboard import (
     is_binary_or_image_file,
     list_files,
     format_files_for_clipboard,
+    select_files,
     EXCLUDED_EXTENSIONS,
 )
 
@@ -182,3 +183,81 @@ def test_main_workflow_multi_pattern(mock_clipboard, mock_input, temp_directory)
     assert "## Selected Files" in clipboard_content
     assert "file2.py" in clipboard_content
     assert "app.js" in clipboard_content
+
+
+# New tests to improve coverage
+
+
+def test_parse_gitignore_missing(tmp_path):
+    """parse_gitignore should return only '.git' when file is missing."""
+    missing_path = tmp_path / "missing.gitignore"
+    assert parse_gitignore(str(missing_path)) == [".git"]
+
+
+@patch("builtins.print")
+def test_select_files_no_files(mock_print):
+    """select_files should warn when no files are found."""
+    assert select_files([]) == []
+    mock_print.assert_any_call(
+        "\n\u26a0\ufe0f No suitable files found. Note: Binary and image files are automatically excluded."
+    )
+
+
+@patch("builtins.input")
+@patch("builtins.print")
+def test_select_files_duplicate_and_list(mock_print, mock_input, tmp_path):
+    """Selecting the same file twice should print a duplicate warning and list works."""
+    file1 = tmp_path / "a.txt"
+    file1.write_text("data")
+    file2 = tmp_path / "b.txt"
+    file2.write_text("data")
+    mock_input.side_effect = ["1", "list", "1", "2", "done"]
+    files = [str(file1), str(file2)]
+    selected = select_files(files)
+    assert selected == files
+    # ensure list branch executed
+    mock_print.assert_any_call("\n📋 Current copy list:")
+    # duplicate warning should appear
+    mock_print.assert_any_call(f"❗ {str(file1)} already in copy list.")
+
+
+def test_format_files_for_clipboard_ioerror(tmp_path):
+    """Any other exception should be captured in output."""
+    good = tmp_path / "good.txt"
+    good.write_text("ok")
+    bad = tmp_path / "bad.txt"
+    bad.write_text("oops")
+    real_open = open
+
+    def fake_open(path, *args, **kwargs):
+        if path == str(bad):
+            raise OSError("boom")
+        return real_open(path, *args, **kwargs)
+
+    with patch("builtins.open", side_effect=fake_open):
+        result = format_files_for_clipboard([str(good), str(bad)], str(tmp_path), [])
+
+    assert "[ERROR: boom]" in result
+
+
+@patch("builtins.input", return_value="done")
+@patch("builtins.print")
+def test_main_no_selection(mock_print, mock_input, tmp_path):
+    """When no files match, main should notify user."""
+    empty_dir = tmp_path
+    from f2clipboard import main
+
+    with patch("sys.stdout"):
+        main(["--dir", str(empty_dir), "--pattern", "nomatch*"])
+
+    mock_print.assert_any_call("🚫 No files selected.")
+
+
+def test_init_all():
+    """Ensure __all__ exposes main."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("pkg", "__init__.py")
+    pkg = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(pkg)
+    assert "main" in pkg.__all__
