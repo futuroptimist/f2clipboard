@@ -2,6 +2,7 @@ import argparse
 import fnmatch
 import os
 import shutil
+
 import clipboard
 
 # Add common image and binary file extensions to exclude

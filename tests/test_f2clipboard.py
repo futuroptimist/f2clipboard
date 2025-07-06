@@ -1,14 +1,16 @@
-import pytest
 import os
 import tempfile
 from unittest.mock import patch
+
+import pytest
+
 from f2clipboard import (
-    parse_gitignore,
+    EXCLUDED_EXTENSIONS,
+    format_files_for_clipboard,
     is_binary_or_image_file,
     list_files,
-    format_files_for_clipboard,
+    parse_gitignore,
     select_files,
-    EXCLUDED_EXTENSIONS,
 )
 
 
