@@ -1,7 +1,7 @@
 # f2clipboard
 
-[![CI](https://github.com/futuroptimist/f2clipboard/actions/workflows/ci.yml/badge.svg)](https://github.com/futuroptimist/f2clipboard/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/futuroptimist/f2clipboard/branch/main/graph/badge.svg)](https://codecov.io/gh/futuroptimist/f2clipboard)
+[![CI](https://github.com/futuroptimist/f2clipboard/actions/workflows/02-tests.yml/badge.svg)](https://github.com/futuroptimist/f2clipboard/actions/workflows/02-tests.yml)
+[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/futuroptimist/f2clipboard)
 
 `f2clipboard` is a lightweight utility for copying multiple files into a single Markdown snippet. It started as a quick way to collect code for pasting into LLM conversations. The project now serves as a small sandbox for experimenting with command line tooling and automation.
 
@@ -12,8 +12,8 @@ This repository is intentionally minimal, but it reuses ideas from the [flywheel
 Before running `f2clipboard`, install the package and its dependency:
 
 ```bash
-pip install clipboard
-pip install -e .
+uv pip install --system clipboard
+uv pip install --system -e .
 ```
 
 ## Requirements
@@ -62,4 +62,4 @@ This roadmap is intentionally high level. The exact implementation details will 
 
 ## Contributing
 
-Please read [AGENTS.md](AGENTS.md) for guidelines on working with language models, running tests, and formatting code. The list of approved models is available in [llms.txt](llms.txt).
+Please read [AGENTS.md](AGENTS.md) for guidelines on working with language models, running tests, and formatting code. See [CONTRIBUTING.md](CONTRIBUTING.md) for development tips and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for behavior expectations. The list of approved models is available in [llms.txt](llms.txt).

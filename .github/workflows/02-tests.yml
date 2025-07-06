@@ -1,4 +1,4 @@
-name: CI
+name: Test Suite
 on: [push, pull_request]
 
 jobs:
@@ -6,11 +6,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v1
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      - run: pip install -e .
-      - run: pip install pytest flake8 black clipboard coverage pytest-cov
+      - run: uv pip install --system -e .
+      - run: uv pip install --system pytest flake8 black clipboard coverage pytest-cov
       - run: black --check f2clipboard.py tests
       - run: flake8
       - run: pytest --cov=f2clipboard --cov=tests -q

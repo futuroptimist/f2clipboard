@@ -7,9 +7,9 @@ import pytest
 
 from f2clipboard import (
     expand_pattern,
+    format_files_for_clipboard,
     parse_gitignore,
     select_files,
-    format_files_for_clipboard,
 )
 
 
