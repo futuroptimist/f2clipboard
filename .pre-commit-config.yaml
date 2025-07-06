@@ -15,4 +15,5 @@ repos:
           - flake8
           - black
           - pytest
+          - clipboard
         pass_filenames: false
