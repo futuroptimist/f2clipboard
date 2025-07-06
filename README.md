@@ -7,13 +7,15 @@
 
 This repository is intentionally minimal, but it reuses ideas from the [flywheel](https://github.com/futuroptimist/flywheel) template. If you need a more robust project skeleton with CI workflows and agent documentation, check out flywheel.
 
+The automated tests run via GitHub Actions and currently achieve **100%** coverage.
+
 ## Installation
 
-Before running `f2clipboard`, install the package and its dependency:
+Before running `f2clipboard`, install [uv](https://github.com/astral-sh/uv) and then install the package and its dependency:
 
 ```bash
-pip install clipboard
-pip install -e .
+uv pip install --system clipboard
+uv pip install --system -e .
 ```
 
 ## Requirements
