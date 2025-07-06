@@ -8,7 +8,7 @@ This project uses lightweight command line utilities to copy files into Markdown
 
 ## Setup
 1. Ensure Python 3.x is installed.
-2. Install dependencies with `pip install clipboard`.
+2. Install dependencies with `uv pip install --system clipboard`.
 3. Optionally create a virtual environment for isolation.
 4. Check `llms.txt` for the list of approved LLMs.
 
@@ -23,6 +23,7 @@ pytest -q
 - Format code with `black`.
 - Keep commit messages concise (`component: summary`).
 - Document any new CLI flags or prompt templates.
+- Run `pre-commit` before pushing changes.
 - Update this file if agent usage changes.
 
 ## Acceptable LLMs
