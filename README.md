@@ -9,7 +9,12 @@ This repository is intentionally minimal, but it reuses ideas from the [flywheel
 
 ## Installation
 
-Before running `f2clipboard`, install the package and its dependency:
+Before running `f2clipboard`, install the package and its dependency. The
+commands below use **uv**, a fast Python package installer that acts as a
+drop-in replacement for `pip`. If you don't have it yet, you can install
+uv via `pipx install uv` (or `pip install uv`). The `--system` flag tells uv to
+install packages into your current Python environment instead of creating a
+virtual environment.
 
 ```bash
 uv pip install --system clipboard

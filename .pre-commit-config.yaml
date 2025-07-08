@@ -16,4 +16,5 @@ repos:
           - black
           - isort
           - pytest
+          - clipboard
         pass_filenames: false
