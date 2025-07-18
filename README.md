@@ -1,7 +1,10 @@
 # f2clipboard
 
-[![CI](https://github.com/futuroptimist/f2clipboard/actions/workflows/02-tests.yml/badge.svg)](https://github.com/futuroptimist/f2clipboard/actions/workflows/02-tests.yml)
-[![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/futuroptimist/f2clipboard)
+[![Lint & Format](https://img.shields.io/github/actions/workflow/status/futuroptimist/f2clipboard/.github/workflows/01-lint-format.yml?label=lint%20%26%20format)](https://github.com/futuroptimist/f2clipboard/actions/workflows/01-lint-format.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/futuroptimist/f2clipboard/.github/workflows/02-tests.yml?label=tests)](https://github.com/futuroptimist/f2clipboard/actions/workflows/02-tests.yml)
+[![Coverage](https://codecov.io/gh/futuroptimist/f2clipboard/branch/main/graph/badge.svg)](https://codecov.io/gh/futuroptimist/f2clipboard)
+[![Docs](https://img.shields.io/github/actions/workflow/status/futuroptimist/f2clipboard/.github/workflows/03-docs.yml?label=docs)](https://github.com/futuroptimist/f2clipboard/actions/workflows/03-docs.yml)
+[![License](https://img.shields.io/github/license/futuroptimist/f2clipboard)](LICENSE)
 
 `f2clipboard` is a lightweight utility for copying multiple files into a single Markdown snippet. It started as a quick way to collect code for pasting into LLM conversations. The project now serves as a small sandbox for experimenting with command line tooling and automation.
 
@@ -19,6 +22,16 @@ virtual environment.
 ```bash
 uv pip install --system clipboard
 uv pip install --system -e .
+```
+
+## Getting Started
+
+Set up pre-commit hooks so linting and tests run automatically:
+
+```bash
+uv pip install --system pre-commit
+pre-commit install
+pre-commit run --all-files
 ```
 
 ## Requirements
@@ -68,3 +81,7 @@ This roadmap is intentionally high level. The exact implementation details will 
 ## Contributing
 
 Please read [AGENTS.md](AGENTS.md) for guidelines on working with language models, running tests, and formatting code. See [CONTRIBUTING.md](CONTRIBUTING.md) for development tips and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for behavior expectations. The list of approved models is available in [llms.txt](llms.txt).
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
