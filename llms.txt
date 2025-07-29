@@ -1,5 +1,12 @@
-# List of approved language models
-# Update this file if new models are added
+# llms.txt
 
-openai/gpt-4
-openai/gpt-3.5-turbo
+> Approved language models for use with this project. This file follows the [llms.txt specification](https://llmstxt.org/) and lists models that may interact with the repository.
+
+## Allowed Models
+- openai/gpt-4
+- openai/gpt-3.5-turbo
+
+## Docs
+- [llms.txt proposal](https://llmstxt.org/index.md)
+- [Python library docs](https://llmstxt.org/intro.html.md)
+- [ed demo](https://llmstxt.org/ed-commonmark.md)
