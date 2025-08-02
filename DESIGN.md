@@ -15,5 +15,6 @@ delegates to the legacy `f2clipboard.py` script. This keeps the original
 `codex-task` experiment without a full rewrite.
 
 Configuration is handled via a small `Settings` class that reads environment
-variables from a `.env` file using Pydantic v2. The `codex-task` command is a
-placeholder that will eventually scrape Codex, query GitHub and summarise logs.
+variables from a `.env` file using the `pydantic-settings` package. The
+`codex-task` command is a placeholder that will eventually scrape Codex, query
+GitHub and summarise logs.

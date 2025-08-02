@@ -1,5 +1,8 @@
 # f2clipboard v2 – "flows to clipboard"
 
+[![CI](https://github.com/futuroptimist/f2clipboard/actions/workflows/lint-test.yml/badge.svg)](https://github.com/futuroptimist/f2clipboard/actions/workflows/lint-test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 ## Problem
 Repetitive web-based engineering chores (triaging CI failures, gathering logs, summarising errors) steal focus and time. Existing tooling (e.g. OpenAI Operator) is deprecated or proprietary.
 
@@ -55,3 +58,28 @@ f2clipboard files --dir path/to/project
 - [ ] Plugin interface (`entry_points = "f2clipboard.plugins"`).
 - [ ] First plugin: Jira ticket summariser.
 - [ ] VS Code task provider / GitHub Action marketplace listing.
+
+## Getting Started
+
+```bash
+git clone https://github.com/futuroptimist/f2clipboard
+cd f2clipboard
+pip install -e ".[dev]"
+cp .env.example .env  # fill in your tokens
+```
+
+Generate a Markdown snippet for a Codex task:
+
+```bash
+f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123
+```
+
+Copy selected files from a local repository:
+
+```bash
+f2clipboard files --dir path/to/project
+```
+
+## Contributing
+
+See [AGENTS.md](AGENTS.md) for LLM-specific guidelines and [CONTRIBUTING.md](CONTRIBUTING.md) for the standard contribution workflow.

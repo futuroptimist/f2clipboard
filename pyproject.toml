@@ -10,6 +10,7 @@ dependencies = [
     "clipboard",
     "typer>=0.9.0",
     "pydantic>=2.0",
+    "pydantic-settings>=2.0",
 ]
 
 [project.scripts]
