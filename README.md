@@ -1,87 +1,57 @@
-# f2clipboard
+# f2clipboard v2 – "flows to clipboard"
 
-[![Lint & Format](https://img.shields.io/github/actions/workflow/status/futuroptimist/f2clipboard/.github/workflows/01-lint-format.yml?label=lint%20%26%20format)](https://github.com/futuroptimist/f2clipboard/actions/workflows/01-lint-format.yml)
-[![Tests](https://img.shields.io/github/actions/workflow/status/futuroptimist/f2clipboard/.github/workflows/02-tests.yml?label=tests)](https://github.com/futuroptimist/f2clipboard/actions/workflows/02-tests.yml)
-[![Coverage](https://codecov.io/gh/futuroptimist/f2clipboard/branch/main/graph/badge.svg)](https://codecov.io/gh/futuroptimist/f2clipboard)
-[![Docs](https://img.shields.io/github/actions/workflow/status/futuroptimist/f2clipboard/.github/workflows/03-docs.yml?label=docs)](https://github.com/futuroptimist/f2clipboard/actions/workflows/03-docs.yml)
-[![License](https://img.shields.io/github/license/futuroptimist/f2clipboard)](LICENSE)
+## Problem
+Repetitive web-based engineering chores (triaging CI failures, gathering logs, summarising errors) steal focus and time. Existing tooling (e.g. OpenAI Operator) is deprecated or proprietary.
 
-`f2clipboard` is a lightweight utility for copying multiple files into a single Markdown snippet. It started as a quick way to collect code for pasting into LLM conversations. The project now serves as a small sandbox for experimenting with command line tooling and automation.
+## Vision
+A single CLI command
+```bash
+f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123…
+```
+should:
 
-This repository is intentionally minimal, but it reuses ideas from the [flywheel](https://github.com/futuroptimist/flywheel) template. If you need a more robust project skeleton with CI workflows and agent documentation, check out flywheel.
+Parse the Codex task page (authenticated session or scraped HTML via Playwright).
 
-## Installation
+Locate the linked GitHub PR (“View PR” button).
 
-Before running `f2clipboard`, install the package and its dependency. The
-commands below use **uv**, a fast Python package installer that acts as a
-drop-in replacement for `pip`. If you don't have it yet, you can install
-uv via `pipx install uv` (or `pip install uv`). The `--system` flag tells uv to
-install packages into your current Python environment instead of creating a
-virtual environment.
+Query the GitHub API for the check-suite:
+
+For every failed check → download full raw logs.
+
+For every successful check → ignore.
+
+If a log exceeds 150 kB → invoke an LLM (configurable, OpenAI or Anthropic) to summarise the failure.
+
+Emit a Markdown snippet ready for pasting back into Codex:
+
+Each failed check becomes a fenced code-block labelled with job name & link.
+
+Oversized logs are replaced by the summary plus a collapsible <details> section with the first 100 lines for context.
+
+The original local file workflow is still available via the `files` command:
 
 ```bash
-uv pip install --system clipboard
-uv pip install --system -e .
+f2clipboard files --dir path/to/project
 ```
-
-## Getting Started
-
-Set up pre-commit hooks so linting and tests run automatically:
-
-```bash
-uv pip install --system pre-commit
-pre-commit install
-pre-commit run --all-files
-```
-
-## Requirements
-
-- Python 3.x
-- clipboard (Python package)
-
-## Usage
-
-Quick usage with the new flag-based interface:
-
-```bash
-python -m f2clipboard --dir path/to/project --pattern "*.py"
-```
-
-You'll then be prompted to choose which files to copy.
-
-1. **Select Files**: Enter the numbers of the files you want to add to your clipboard, separated by commas:
-
-   ```plaintext
-   🔍 Enter file numbers to add, 'list' to review, or 'done' to finalize: 1, 4, 5
-   ```
-
-2. **Review and Finalize**: If you need to review your selection, type `list`. Once you are done selecting files, type `done` to copy the formatted content to the clipboard.
-
-   ```plaintext
-   🔍 Enter file numbers to add, 'list' to review, or 'done' to finalize: done
-   ```
-
-## Known Limitations
-
-- The script assumes that all files are text-based and encodable in UTF-8.
-- Larger files may not be efficiently handled due to clipboard size limitations.
 
 ## Roadmap
+### M0 (bootstrap)
+- [ ] Ship basic CLI with `codex-task` command and help text.
+- [ ] Support GitHub personal-access tokens via `.env`.
+- [ ] Fetch PR URL from Codex task HTML (unauthenticated test page).
 
-The next iteration of this project will grow into a more featureful CLI application for creating **macro-based workflows**. The vision:
+### M1 (minimum lovable product)
+- [ ] Parse check-suites with GitHub REST v3.
+- [ ] Download raw logs; gzip-decode when necessary.
+- [ ] Size-gate logs → summarise via LLM.
+- [ ] Write Markdown artefact to `stdout` **and** clipboard.
 
-1. **Visual Workflow Builder** – A local web interface (inspired by tools like ComfyUI or Unreal Engine's Blueprints) will let users chain together actions. Each node in the graph will represent a simple step such as running an LLM prompt, executing a shell command, or manipulating files.
-2. **LLM as a Building Block** – LLM inference will be treated as a primitive node. Workflows can mix multiple prompts with conventional scripting to automate larger tasks, similar to how Codex or Cursor orchestrate agentic flows.
-3. **Configurable Port** – The interface will run on `localhost:<USER_SPECIFIED_PORT>` (default `localhost:8765`). The CLI will accept a `--port` flag so users can override this value.
-4. **Flywheel Integration** – Borrow the structure and automated checks from the [flywheel](https://github.com/futuroptimist/flywheel) template so contributors can iterate quickly. This includes linting, tests, documentation validation and optional agent documentation via an `AGENTS.md` file.
-5. **Extensibility** – The codebase will remain small and easy to fork. Future contributors (human or LLM) should be able to add new node types or modify the interface with minimal setup.
+### M2 (hardening)
+- [ ] Playwright headless login for private Codex tasks.
+- [ ] Secret scanning & redaction (via `talisman` or custom regex).
+- [ ] Unit tests (pytest + `pytest-recording` vcr).
 
-This roadmap is intentionally high level. The exact implementation details will be refined in future commits, but this document should provide enough context for anyone looking to contribute or experiment.
-
-## Contributing
-
-Please read [AGENTS.md](AGENTS.md) for guidelines on working with language models, running tests, and formatting code. See [CONTRIBUTING.md](CONTRIBUTING.md) for development tips and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for behavior expectations. The list of approved models is available in [llms.txt](llms.txt).
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
+### M3 (extensibility)
+- [ ] Plugin interface (`entry_points = "f2clipboard.plugins"`).
+- [ ] First plugin: Jira ticket summariser.
+- [ ] VS Code task provider / GitHub Action marketplace listing.

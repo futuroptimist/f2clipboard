@@ -17,4 +17,7 @@ repos:
           - isort
           - pytest
           - clipboard
+          - typer
+          - pydantic
+          - pydantic-settings
         pass_filenames: false
