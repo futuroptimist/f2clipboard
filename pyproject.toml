@@ -13,6 +13,17 @@ dependencies = [
     "pydantic-settings>=2.0",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pre-commit",
+    "pytest",
+    "pytest-recording",
+    "ruff",
+    "flake8",
+    "black",
+    "isort",
+]
+
 [project.scripts]
 f2clipboard = "f2clipboard.cli:main"
 
@@ -21,6 +32,9 @@ addopts = "-q"
 
 [tool.isort]
 profile = "black"
+
+[tool.black]
+line-length = 88
 
 [build-system]
 requires = ["setuptools>=61.0"]

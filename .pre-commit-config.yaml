@@ -12,12 +12,8 @@ repos:
         entry: bash scripts/checks.sh
         language: python
         additional_dependencies:
+          - ruff
           - flake8
           - black
           - isort
-          - pytest
-          - clipboard
-          - typer
-          - pydantic
-          - pydantic-settings
         pass_filenames: false

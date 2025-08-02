@@ -10,9 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v1
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -U pip ruff pytest pytest-recording typer pydantic[dotenv]
-      - run: ruff check .
+      - run: uv pip install --system -e .[dev]
+      - run: pre-commit run --all-files --show-diff-on-failure --color=always
       - run: pytest -q
