@@ -7,17 +7,34 @@ authors = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "clipboard"
+    "clipboard",
+    "typer>=0.9.0",
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit",
+    "pytest",
+    "pytest-recording",
+    "ruff",
+    "flake8",
+    "black",
+    "isort",
 ]
 
 [project.scripts]
-f2clipboard = "f2clipboard:main"
+f2clipboard = "f2clipboard.cli:main"
 
 [tool.pytest.ini_options]
 addopts = "-q"
 
 [tool.isort]
 profile = "black"
+
+[tool.black]
+line-length = 88
 
 [build-system]
 requires = ["setuptools>=61.0"]

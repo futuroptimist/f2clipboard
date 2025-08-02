@@ -3,7 +3,8 @@
 > This file follows the [AGENTS.md specification](https://agentsmd.net/) and provides instructions for LLM contributors. Its scope is the entire repository. Nested `AGENTS.md` files override these rules. Always run the checks listed below after modifying any files.
 
 ## Project Structure
-- `f2clipboard.py` – CLI entry point
+- `f2clipboard/` – Typer-based CLI package (`codex-task` and `files` commands)
+- `f2clipboard.py` – legacy local-file workflow invoked by the `files` command
 - `tests/` – test suite
 - `scripts/` – helper scripts
 - `AGENTS.md` and `llms.txt` – agent and model guidance
