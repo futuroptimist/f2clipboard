@@ -44,8 +44,8 @@ f2clipboard files --dir path/to/project
 - [x] Fetch PR URL from Codex task HTML (unauthenticated test page).
 
 ### M1 (minimum lovable product)
-- [ ] Parse check-suites with GitHub REST v3.
-- [ ] Download raw logs; gzip-decode when necessary.
+- [x] Parse check-suites with GitHub REST v3.
+- [x] Download raw logs; gzip-decode when necessary.
 - [ ] Size-gate logs → summarise via LLM.
 - [ ] Write Markdown artefact to `stdout` **and** clipboard.
 
