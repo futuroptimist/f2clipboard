@@ -39,9 +39,9 @@ f2clipboard files --dir path/to/project
 
 ## Roadmap
 ### M0 (bootstrap)
-- [ ] Ship basic CLI with `codex-task` command and help text.
-- [ ] Support GitHub personal-access tokens via `.env`.
-- [ ] Fetch PR URL from Codex task HTML (unauthenticated test page).
+- [x] Ship basic CLI with `codex-task` command and help text.
+- [x] Support GitHub personal-access tokens via `.env`.
+- [x] Fetch PR URL from Codex task HTML (unauthenticated test page).
 
 ### M1 (minimum lovable product)
 - [ ] Parse check-suites with GitHub REST v3.
@@ -82,4 +82,4 @@ f2clipboard files --dir path/to/project
 
 ## Contributing
 
-See [AGENTS.md](AGENTS.md) for LLM-specific guidelines and [CONTRIBUTING.md](CONTRIBUTING.md) for the standard contribution workflow.
+See [AGENTS.md](AGENTS.md) for LLM-specific guidelines and [CONTRIBUTING.md](CONTRIBUTING.md) for the standard contribution workflow. Prompt templates live in [docs/prompts-codex.md](docs/prompts-codex.md).
