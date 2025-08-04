@@ -11,6 +11,7 @@ import httpx
 import typer
 
 from .config import Settings
+from .llm import summarise_log
 
 GITHUB_API = "https://api.github.com"
 
@@ -92,7 +93,12 @@ async def _process_task(url: str, settings: Settings) -> str:
                 continue
             log_text = await _download_log(client, owner, repo, run["id"])
             if len(log_text.encode()) > settings.log_size_threshold:
-                log_text = log_text[:100] + "\n…\n"  # TODO: summarise via LLM
+                summary = await summarise_log(log_text, settings)
+                snippet = "\n".join(log_text.splitlines()[:100])
+                log_text = (
+                    f"{summary}\n\n<details>\n<summary>First 100 lines</summary>\n\n"
+                    f"```text\n{snippet}\n```\n</details>"
+                )
             sections.append(f"### {run['name']}\n\n```text\n{log_text}\n```")
 
     return "\n\n".join(sections) or "No failing checks"
