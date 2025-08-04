@@ -1,6 +1,13 @@
+import asyncio
 import gzip
 
-from f2clipboard.codex_task import _decode_log, _extract_pr_url, _parse_pr_url
+from f2clipboard.codex_task import (
+    _decode_log,
+    _extract_pr_url,
+    _parse_pr_url,
+    _process_task,
+)
+from f2clipboard.config import Settings
 
 
 def test_extract_pr_url_success():
@@ -27,3 +34,56 @@ def test_decode_log_handles_gzip():
 
 def test_decode_log_plain():
     assert _decode_log(b"plain") == "plain"
+
+
+def test_process_task_summarises_large_log(monkeypatch):
+    async def fake_html(url: str) -> str:
+        return '<a href="https://github.com/o/r/pull/1">PR</a>'
+
+    async def fake_runs(pr_url: str, token: str | None):
+        return [{"id": 1, "name": "Job", "conclusion": "failure"}]
+
+    async def fake_log(client, owner, repo, run_id):
+        return "log line\n" * 200  # large
+
+    async def fake_summary(text: str, settings: Settings) -> str:
+        return "SUMMARY"
+
+    monkeypatch.setattr("f2clipboard.codex_task._fetch_task_html", fake_html)
+    monkeypatch.setattr("f2clipboard.codex_task._fetch_check_runs", fake_runs)
+    monkeypatch.setattr("f2clipboard.codex_task._download_log", fake_log)
+    monkeypatch.setattr("f2clipboard.codex_task.summarise_log", fake_summary)
+
+    settings = Settings()
+    settings.log_size_threshold = 100
+    result = asyncio.run(_process_task("http://task", settings))
+    assert "SUMMARY" in result
+    assert "<details>" in result
+
+
+def test_process_task_small_log_skips_summarise(monkeypatch):
+    async def fake_html(url: str) -> str:
+        return '<a href="https://github.com/o/r/pull/1">PR</a>'
+
+    async def fake_runs(pr_url: str, token: str | None):
+        return [{"id": 1, "name": "Job", "conclusion": "failure"}]
+
+    async def fake_log(client, owner, repo, run_id):
+        return "short"
+
+    called: list[str] = []
+
+    async def fake_summary(text: str, settings: Settings) -> str:
+        called.append("yes")
+        return "SUMMARY"
+
+    monkeypatch.setattr("f2clipboard.codex_task._fetch_task_html", fake_html)
+    monkeypatch.setattr("f2clipboard.codex_task._fetch_check_runs", fake_runs)
+    monkeypatch.setattr("f2clipboard.codex_task._download_log", fake_log)
+    monkeypatch.setattr("f2clipboard.codex_task.summarise_log", fake_summary)
+
+    settings = Settings()
+    settings.log_size_threshold = 100
+    result = asyncio.run(_process_task("http://task", settings))
+    assert "short" in result
+    assert not called

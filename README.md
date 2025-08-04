@@ -46,7 +46,7 @@ f2clipboard files --dir path/to/project
 ### M1 (minimum lovable product)
 - [x] Parse check-suites with GitHub REST v3.
 - [x] Download raw logs; gzip-decode when necessary.
-- [ ] Size-gate logs → summarise via LLM.
+- [x] Size-gate logs → summarise via LLM. 💯
 - [ ] Write Markdown artefact to `stdout` **and** clipboard.
 
 ### M2 (hardening)
@@ -66,6 +66,7 @@ git clone https://github.com/futuroptimist/f2clipboard
 cd f2clipboard
 pip install -e ".[dev]"
 cp .env.example .env  # fill in your tokens
+# Set OPENAI_API_KEY or ANTHROPIC_API_KEY for log summarisation
 ```
 
 Generate a Markdown snippet for a Codex task:
