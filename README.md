@@ -52,7 +52,7 @@ f2clipboard files --dir path/to/project
 ### M2 (hardening)
 - [ ] Playwright headless login for private Codex tasks.
 - [ ] Secret scanning & redaction (via `talisman` or custom regex).
-- [ ] Unit tests (pytest + `pytest-recording` vcr).
+- [x] Unit tests (pytest + `pytest-recording` vcr). 💯
 
 ### M3 (extensibility)
 - [ ] Plugin interface (`entry_points = "f2clipboard.plugins"`).

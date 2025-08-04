@@ -1,9 +1,12 @@
 import asyncio
 import gzip
 
+import pytest
+
 from f2clipboard.codex_task import (
     _decode_log,
     _extract_pr_url,
+    _fetch_task_html,
     _parse_pr_url,
     _process_task,
     codex_task_command,
@@ -105,3 +108,9 @@ def test_codex_task_command_copies_to_clipboard(monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "MD" in out
     assert copied["text"] == "MD"
+
+
+@pytest.mark.vcr()
+def test_fetch_task_html_records_example():
+    html = asyncio.run(_fetch_task_html("https://example.com"))
+    assert "Example Domain" in html
