@@ -25,6 +25,8 @@ For every successful check → ignore.
 
 If a log exceeds 150 kB → invoke an LLM (configurable, OpenAI or Anthropic) to summarise the failure.
 
+Secrets such as API tokens are redacted from logs before summarisation or output.
+
 Emit a Markdown snippet ready for pasting back into Codex:
 
 Each failed check becomes a fenced code-block labelled with job name & link.
@@ -51,7 +53,7 @@ f2clipboard files --dir path/to/project
 
 ### M2 (hardening)
 - [ ] Playwright headless login for private Codex tasks.
-- [ ] Secret scanning & redaction (via `talisman` or custom regex).
+- [x] Secret scanning & redaction (via custom regex). 💯
 - [ ] Unit tests (pytest + `pytest-recording` vcr).
 
 ### M3 (extensibility)
