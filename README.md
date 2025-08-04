@@ -21,6 +21,8 @@ Query the GitHub API for the check-suite:
 
 For every failed check → download full raw logs.
 
+Scan logs for known secrets and redact them.
+
 For every successful check → ignore.
 
 If a log exceeds 150 kB → invoke an LLM (configurable, OpenAI or Anthropic) to summarise the failure.
@@ -51,7 +53,7 @@ f2clipboard files --dir path/to/project
 
 ### M2 (hardening)
 - [ ] Playwright headless login for private Codex tasks.
-- [ ] Secret scanning & redaction (via `talisman` or custom regex).
+- [x] Secret scanning & redaction (via `talisman` or custom regex). 💯
 - [ ] Unit tests (pytest + `pytest-recording` vcr).
 
 ### M3 (extensibility)

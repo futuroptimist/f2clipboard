@@ -90,6 +90,29 @@ def test_process_task_small_log_skips_summarise(monkeypatch):
     assert not called
 
 
+def test_process_task_redacts_secrets(monkeypatch):
+    secret = "ghp_1234567890abcdef1234567890abcdef1234"
+
+    async def fake_html(url: str) -> str:
+        return '<a href="https://github.com/o/r/pull/1">PR</a>'
+
+    async def fake_runs(pr_url: str, token: str | None):
+        return [{"id": 1, "name": "Job", "conclusion": "failure"}]
+
+    async def fake_log(client, owner, repo, run_id):
+        return f"error {secret}"
+
+    monkeypatch.setattr("f2clipboard.codex_task._fetch_task_html", fake_html)
+    monkeypatch.setattr("f2clipboard.codex_task._fetch_check_runs", fake_runs)
+    monkeypatch.setattr("f2clipboard.codex_task._download_log", fake_log)
+
+    settings = Settings()
+    settings.log_size_threshold = 1000
+    result = asyncio.run(_process_task("http://task", settings))
+    assert "[REDACTED]" in result
+    assert secret not in result
+
+
 def test_codex_task_command_copies_to_clipboard(monkeypatch, capsys):
     async def fake_process(url: str, settings: Settings) -> str:
         return "MD"

@@ -13,6 +13,7 @@ import typer
 
 from .config import Settings
 from .llm import summarise_log
+from .redaction import redact_secrets
 
 GITHUB_API = "https://api.github.com"
 
@@ -93,6 +94,7 @@ async def _process_task(url: str, settings: Settings) -> str:
             if run.get("conclusion") == "success":
                 continue
             log_text = await _download_log(client, owner, repo, run["id"])
+            log_text = redact_secrets(log_text)
             if len(log_text.encode()) > settings.log_size_threshold:
                 summary = await summarise_log(log_text, settings)
                 snippet = "\n".join(log_text.splitlines()[:100])
