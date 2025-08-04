@@ -7,6 +7,7 @@ import gzip
 import re
 from typing import Any
 
+import clipboard
 import httpx
 import typer
 
@@ -111,4 +112,5 @@ def codex_task_command(
     typer.echo(f"Parsing Codex task page: {url}…")
     settings = Settings()  # load environment (e.g. GITHUB_TOKEN)
     result = asyncio.run(_process_task(url, settings))
+    clipboard.copy(result)
     typer.echo(result)

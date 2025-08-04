@@ -6,6 +6,7 @@ from f2clipboard.codex_task import (
     _extract_pr_url,
     _parse_pr_url,
     _process_task,
+    codex_task_command,
 )
 from f2clipboard.config import Settings
 
@@ -87,3 +88,20 @@ def test_process_task_small_log_skips_summarise(monkeypatch):
     result = asyncio.run(_process_task("http://task", settings))
     assert "short" in result
     assert not called
+
+
+def test_codex_task_command_copies_to_clipboard(monkeypatch, capsys):
+    async def fake_process(url: str, settings: Settings) -> str:
+        return "MD"
+
+    monkeypatch.setattr("f2clipboard.codex_task._process_task", fake_process)
+    copied: dict[str, str] = {}
+
+    def fake_copy(text: str) -> None:
+        copied["text"] = text
+
+    monkeypatch.setattr("f2clipboard.codex_task.clipboard.copy", fake_copy)
+    codex_task_command("http://task")
+    out = capsys.readouterr().out
+    assert "MD" in out
+    assert copied["text"] == "MD"
