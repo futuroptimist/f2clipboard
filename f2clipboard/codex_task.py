@@ -8,6 +8,7 @@ import re
 from typing import Any
 
 import httpx
+import pyperclip
 import typer
 
 from .config import Settings
@@ -106,3 +107,7 @@ def codex_task_command(
     settings = Settings()  # load environment (e.g. GITHUB_TOKEN)
     result = asyncio.run(_process_task(url, settings))
     typer.echo(result)
+    try:
+        pyperclip.copy(result)
+    except pyperclip.PyperclipException:
+        typer.secho("Warning: could not copy to clipboard", err=True)

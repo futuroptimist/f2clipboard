@@ -47,7 +47,7 @@ f2clipboard files --dir path/to/project
 - [x] Parse check-suites with GitHub REST v3.
 - [x] Download raw logs; gzip-decode when necessary.
 - [ ] Size-gate logs → summarise via LLM.
-- [ ] Write Markdown artefact to `stdout` **and** clipboard.
+- [x] Write Markdown artefact to `stdout` **and** clipboard. 💯
 
 ### M2 (hardening)
 - [ ] Playwright headless login for private Codex tasks.
@@ -73,6 +73,8 @@ Generate a Markdown snippet for a Codex task:
 ```bash
 f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123
 ```
+
+The Markdown report prints to your terminal and is copied to your clipboard for easy pasting.
 
 Copy selected files from a local repository:
 
