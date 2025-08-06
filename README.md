@@ -78,6 +78,11 @@ f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123
 ```
 
 The resulting Markdown is printed to your terminal and copied to the clipboard.
+To skip copying to the clipboard, pass ``--no-clipboard``:
+
+```bash
+f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123 --no-clipboard
+```
 
 Copy selected files from a local repository:
 
