@@ -109,10 +109,19 @@ async def _process_task(url: str, settings: Settings) -> str:
 
 def codex_task_command(
     url: str = typer.Argument(..., help="Codex task URL to process"),
+    copy_to_clipboard: bool = typer.Option(
+        True,
+        "--clipboard/--no-clipboard",
+        help="Copy result to the system clipboard.",
+    ),
 ) -> None:
-    """Parse a Codex task page and print any failing GitHub checks."""
+    """Parse a Codex task page and print any failing GitHub checks.
+
+    The generated Markdown is copied to the clipboard unless ``--no-clipboard`` is passed.
+    """
     typer.echo(f"Parsing Codex task page: {url}…")
     settings = Settings()  # load environment (e.g. GITHUB_TOKEN)
     result = asyncio.run(_process_task(url, settings))
-    clipboard.copy(result)
+    if copy_to_clipboard:
+        clipboard.copy(result)
     typer.echo(result)
