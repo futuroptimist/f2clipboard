@@ -57,7 +57,7 @@ f2clipboard files --dir path/to/project
 - [x] Secret scanning & redaction (via custom regex). 💯
 
 ### M3 (extensibility)
-- [ ] Plugin interface (`entry_points = "f2clipboard.plugins"`).
+- [x] Plugin interface (`entry_points = "f2clipboard.plugins"`). 💯
 - [ ] First plugin: Jira ticket summariser.
 - [ ] VS Code task provider / GitHub Action marketplace listing.
 
@@ -83,6 +83,16 @@ Copy selected files from a local repository:
 
 ```bash
 f2clipboard files --dir path/to/project
+```
+
+## Plugins
+
+f2clipboard loads plugins registered under the `f2clipboard.plugins` entry-point group. A plugin
+exposes a callable that receives the Typer app and can register additional commands.
+
+```toml
+[project.entry-points."f2clipboard.plugins"]
+hello = "my_package.plugin:register"
 ```
 
 ## Contributing
