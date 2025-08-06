@@ -6,6 +6,7 @@ import pytest
 from f2clipboard.codex_task import (
     _decode_log,
     _extract_pr_url,
+    _fetch_check_runs,
     _fetch_task_html,
     _parse_pr_url,
     _process_task,
@@ -29,6 +30,40 @@ def test_parse_pr_url():
         "repo",
         42,
     )
+
+
+def test_fetch_check_runs_parses_response(monkeypatch):
+    class DummyResponse:
+        def __init__(self, data):
+            self._data = data
+
+        def raise_for_status(self) -> None:  # pragma: no cover - no error path
+            pass
+
+        def json(self):
+            return self._data
+
+    class DummyClient:
+        def __init__(self, *args, **kwargs):
+            self.calls: list[str] = []
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb) -> None:
+            pass
+
+        async def get(self, path: str):
+            self.calls.append(path)
+            if path == "/repos/o/r/pulls/1":
+                return DummyResponse({"head": {"sha": "abc"}})
+            if path == "/repos/o/r/commits/abc/check-runs":
+                return DummyResponse({"check_runs": [{"id": 99, "name": "CI"}]})
+            raise AssertionError(f"Unexpected path {path}")
+
+    monkeypatch.setattr("f2clipboard.codex_task.httpx.AsyncClient", DummyClient)
+    runs = asyncio.run(_fetch_check_runs("https://github.com/o/r/pull/1", None))
+    assert runs == [{"id": 99, "name": "CI"}]
 
 
 def test_decode_log_handles_gzip():
