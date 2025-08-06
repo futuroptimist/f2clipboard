@@ -28,6 +28,9 @@ dev = [
 [project.scripts]
 f2clipboard = "f2clipboard.cli:main"
 
+[project.entry-points."f2clipboard.plugins"]
+jira = "f2clipboard.plugins.jira:register"
+
 [tool.pytest.ini_options]
 addopts = "-q"
 

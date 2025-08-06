@@ -58,7 +58,7 @@ f2clipboard files --dir path/to/project
 
 ### M3 (extensibility)
 - [x] Plugin interface (`entry_points = "f2clipboard.plugins"`). 💯
-- [ ] First plugin: Jira ticket summariser.
+- [x] First plugin: Jira ticket summariser. 💯
 - [ ] VS Code task provider / GitHub Action marketplace listing.
 
 ## Getting Started
@@ -94,6 +94,15 @@ exposes a callable that receives the Typer app and can register additional comma
 [project.entry-points."f2clipboard.plugins"]
 hello = "my_package.plugin:register"
 ```
+
+The first bundled plugin summarises Jira issues:
+
+```bash
+f2clipboard jira path/to/issue.json
+```
+
+Provide either a Jira issue URL or a path to a JSON export. The ticket's description is summarised
+and copied to your clipboard.
 
 ## Contributing
 
