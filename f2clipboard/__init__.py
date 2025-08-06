@@ -1,4 +1,5 @@
-from importlib.metadata import PackageNotFoundError, version
+import logging
+from importlib.metadata import PackageNotFoundError, entry_points, version
 
 from typer import Typer
 
@@ -13,6 +14,21 @@ except PackageNotFoundError:  # pragma: no cover
 app = Typer(add_completion=False, help="Flows \u2192 clipboard automation CLI")
 app.command("codex-task")(codex_task_command)
 app.command("files")(files_command)
+
+
+def _load_plugins() -> None:
+    """Load registered entry-point plugins."""
+    for ep in entry_points(group="f2clipboard.plugins"):
+        try:
+            plugin = ep.load()
+            plugin(app)
+        except Exception as exc:  # pragma: no cover - defensive
+            logging.getLogger(__name__).warning(
+                "Failed to load plugin %s: %s", ep.name, exc
+            )
+
+
+_load_plugins()
 
 
 def main(argv: list[str] | None = None) -> None:
