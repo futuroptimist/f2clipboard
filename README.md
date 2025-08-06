@@ -47,7 +47,7 @@ f2clipboard files --dir path/to/project
 
 ### M1 (minimum lovable product)
 - [x] Parse check-suites with GitHub REST v3. 💯
-- [x] Download raw logs; gzip-decode when necessary.
+- [x] Download raw logs; gzip-decode when necessary. 💯
 - [x] Size-gate logs → summarise via LLM. 💯
 - [x] Write Markdown artefact to `stdout` **and** clipboard. 💯
 
