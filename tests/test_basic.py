@@ -26,6 +26,22 @@ def test_cli_help():
     assert "files" in result.stdout
 
 
+def test_codex_task_help_shows_no_copy():
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "f2clipboard.cli",
+            "codex-task",
+            "--help",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert "--no-copy" in result.stdout
+
+
 def test_settings_env(tmp_path, monkeypatch):
     env_file = tmp_path / ".env"
     env_file.write_text("GITHUB_TOKEN=test\nLOG_SIZE_THRESHOLD=123\n")

@@ -145,6 +145,23 @@ def test_codex_task_command_copies_to_clipboard(monkeypatch, capsys):
     assert copied["text"] == "MD"
 
 
+def test_codex_task_command_no_copy(monkeypatch, capsys):
+    async def fake_process(url: str, settings: Settings) -> str:
+        return "MD"
+
+    monkeypatch.setattr("f2clipboard.codex_task._process_task", fake_process)
+    called: list[str] = []
+
+    def fake_copy(text: str) -> None:
+        called.append(text)
+
+    monkeypatch.setattr("f2clipboard.codex_task.clipboard.copy", fake_copy)
+    codex_task_command("http://task", copy_to_clipboard=False)
+    out = capsys.readouterr().out
+    assert "MD" in out
+    assert not called
+
+
 @pytest.mark.vcr()
 def test_fetch_task_html_records_example():
     html = asyncio.run(_fetch_task_html("https://example.com"))
