@@ -7,11 +7,13 @@ from f2clipboard.secret import redact_secrets
 
 def test_redact_secrets():
     token = "ghp_" + "a" * 36
-    text = f"TOKEN=abcdef123456 {token}"
+    openai_token = "sk-" + "b" * 48
+    text = f"TOKEN=abcdef123456 {token} {openai_token}"
     redacted = redact_secrets(text)
     assert "abcdef123456" not in redacted
     assert "ghp_REDACTED" in redacted
     assert "TOKEN=***" in redacted
+    assert "sk-REDACTED" in redacted
 
 
 def test_process_task_redacts(monkeypatch):
