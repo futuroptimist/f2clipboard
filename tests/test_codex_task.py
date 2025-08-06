@@ -5,6 +5,7 @@ import pytest
 
 from f2clipboard.codex_task import (
     _decode_log,
+    _download_log,
     _extract_pr_url,
     _fetch_check_runs,
     _fetch_task_html,
@@ -73,6 +74,23 @@ def test_decode_log_handles_gzip():
 
 def test_decode_log_plain():
     assert _decode_log(b"plain") == "plain"
+
+
+def test_download_log_handles_gzip():
+    class DummyResponse:
+        def __init__(self, data: bytes):
+            self.content = data
+
+        def raise_for_status(self) -> None:  # pragma: no cover - no error path
+            pass
+
+    class DummyClient:
+        async def get(self, path: str):
+            assert path == "/repos/o/r/check-runs/1/logs"
+            return DummyResponse(gzip.compress(b"log"))
+
+    result = asyncio.run(_download_log(DummyClient(), "o", "r", 1))
+    assert result == "log"
 
 
 def test_process_task_summarises_large_log(monkeypatch):

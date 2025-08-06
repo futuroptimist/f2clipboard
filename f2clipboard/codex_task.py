@@ -44,11 +44,16 @@ def _parse_pr_url(pr_url: str) -> tuple[str, str, int]:
 
 
 def _decode_log(data: bytes) -> str:
-    """Return log text, decompressing if content is gzipped."""
-    try:
+    """Return log text, decompressing if the payload is gzipped.
+
+    GitHub's log endpoint sometimes returns gzip-compressed bytes without a
+    `Content-Encoding` header. Rather than relying on exception handling, we
+    inspect the magic header to decide whether decompression is required.
+    """
+
+    if data[:2] == b"\x1f\x8b":  # gzip magic number
         return gzip.decompress(data).decode()
-    except OSError:
-        return data.decode()
+    return data.decode()
 
 
 async def _fetch_check_runs(pr_url: str, token: str | None) -> list[dict[str, Any]]:
