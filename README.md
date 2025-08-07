@@ -85,6 +85,12 @@ To skip copying to the clipboard, pass ``--no-clipboard``:
 f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123 --no-clipboard
 ```
 
+Adjust the log size threshold for summarisation with ``--log-size-threshold``:
+
+```bash
+f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123 --log-size-threshold 200000
+```
+
 Generate a prompt that reads a shared chat transcript and implements any code or configuration
 changes it mentions:
 

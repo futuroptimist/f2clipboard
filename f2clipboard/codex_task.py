@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import gzip
 import re
-from typing import Any
+from typing import Annotated, Any
 
 import clipboard
 import httpx
@@ -150,11 +150,13 @@ def codex_task_command(
         "--clipboard/--no-clipboard",
         help="Copy result to the system clipboard.",
     ),
-    log_size_threshold: int | None = typer.Option(
-        None,
-        "--log-size-threshold",
-        help="Summarise logs larger than this many bytes.",
-    ),
+    log_size_threshold: Annotated[
+        int | None,
+        typer.Option(
+            "--log-size-threshold",
+            help="Summarise logs larger than this many bytes.",
+        ),
+    ] = None,
 ) -> None:
     """Parse a Codex task page and print any failing GitHub checks.
 
@@ -165,6 +167,10 @@ def codex_task_command(
     settings = Settings()  # load environment (e.g. GITHUB_TOKEN)
     if log_size_threshold is not None:
         settings.log_size_threshold = log_size_threshold
+    if log_size_threshold is not None:
+        settings = Settings(LOG_SIZE_THRESHOLD=log_size_threshold)
+    else:
+        settings = Settings()  # load environment (e.g. GITHUB_TOKEN)
     result = asyncio.run(_process_task(url, settings))
     if copy_to_clipboard:
         clipboard.copy(result)
