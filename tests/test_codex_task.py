@@ -94,7 +94,7 @@ def test_download_log_handles_gzip():
 
 
 def test_process_task_summarises_large_log(monkeypatch):
-    async def fake_html(url: str) -> str:
+    async def fake_html(url: str, cookie: str | None = None) -> str:
         return '<a href="https://github.com/o/r/pull/1">PR</a>'
 
     async def fake_runs(pr_url: str, token: str | None):
@@ -119,7 +119,7 @@ def test_process_task_summarises_large_log(monkeypatch):
 
 
 def test_process_task_small_log_skips_summarise(monkeypatch):
-    async def fake_html(url: str) -> str:
+    async def fake_html(url: str, cookie: str | None = None) -> str:
         return '<a href="https://github.com/o/r/pull/1">PR</a>'
 
     async def fake_runs(pr_url: str, token: str | None):
@@ -184,3 +184,48 @@ def test_codex_task_command_skips_clipboard(monkeypatch, capsys):
 def test_fetch_task_html_records_example():
     html = asyncio.run(_fetch_task_html("https://example.com"))
     assert "Example Domain" in html
+
+
+def test_fetch_task_html_uses_playwright(monkeypatch):
+    class DummyPage:
+        async def goto(self, url: str) -> None:  # pragma: no cover - trivial
+            self.url = url
+
+        async def content(self) -> str:
+            return "<html>private</html>"
+
+    class DummyContext:
+        async def add_cookies(self, cookies):  # pragma: no cover - trivial
+            self.cookies = cookies
+
+        async def new_page(self) -> DummyPage:
+            return DummyPage()
+
+    class DummyBrowser:
+        async def new_context(self) -> DummyContext:
+            return DummyContext()
+
+        async def close(self) -> None:  # pragma: no cover - trivial
+            pass
+
+    class DummyPW:
+        def __init__(self) -> None:  # pragma: no cover - trivial
+            self.chromium = self
+
+        async def launch(self, headless: bool = True) -> DummyBrowser:
+            return DummyBrowser()
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb) -> None:
+            pass
+
+    def fake_async_playwright():
+        return DummyPW()
+
+    monkeypatch.setattr(
+        "f2clipboard.codex_task.async_playwright", fake_async_playwright
+    )
+    html = asyncio.run(_fetch_task_html("https://example.com/task", cookie="secret"))
+    assert "private" in html

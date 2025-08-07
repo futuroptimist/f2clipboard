@@ -28,8 +28,11 @@ def test_cli_help():
 
 def test_settings_env(tmp_path, monkeypatch):
     env_file = tmp_path / ".env"
-    env_file.write_text("GITHUB_TOKEN=test\nLOG_SIZE_THRESHOLD=123\n")
+    env_file.write_text(
+        "GITHUB_TOKEN=test\nLOG_SIZE_THRESHOLD=123\nCODEX_COOKIE=cookie\n"  # pragma: allowlist secret
+    )
     monkeypatch.chdir(tmp_path)
     settings = Settings()
     assert settings.github_token == "test"
     assert settings.log_size_threshold == 123
+    assert settings.codex_cookie == "cookie"
