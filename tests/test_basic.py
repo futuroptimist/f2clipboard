@@ -26,6 +26,21 @@ def test_cli_help():
     assert "files" in result.stdout
 
 
+def test_cli_version():
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "f2clipboard.cli",
+            "--version",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert __version__ in result.stdout
+
+
 def test_settings_env(tmp_path, monkeypatch):
     env_file = tmp_path / ".env"
     env_file.write_text("GITHUB_TOKEN=test\nLOG_SIZE_THRESHOLD=123\n")
