@@ -42,7 +42,7 @@ f2clipboard files --dir path/to/project
 ## Roadmap
 ### M0 (bootstrap)
 - [x] Ship basic CLI with `codex-task` command and help text.
-- [x] Support GitHub personal-access tokens via `.env`.
+- [x] Support GitHub personal-access tokens via `.env`. 💯
 - [x] Fetch PR URL from Codex task HTML (unauthenticated test page).
 
 ### M1 (minimum lovable product)
@@ -68,6 +68,7 @@ git clone https://github.com/futuroptimist/f2clipboard
 cd f2clipboard
 pip install -e ".[dev]"
 cp .env.example .env  # fill in your tokens
+# Set GITHUB_TOKEN to authenticate GitHub API requests
 # Set OPENAI_API_KEY or ANTHROPIC_API_KEY for log summarisation
 # Set CODEX_COOKIE to access private Codex tasks
 ```

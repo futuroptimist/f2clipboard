@@ -67,6 +67,39 @@ def test_fetch_check_runs_parses_response(monkeypatch):
     assert runs == [{"id": 99, "name": "CI"}]
 
 
+def test_fetch_check_runs_includes_token(monkeypatch):
+    captured: dict[str, dict[str, str]] = {}
+
+    class DummyResponse:
+        def __init__(self, data):
+            self._data = data
+
+        def raise_for_status(self) -> None:  # pragma: no cover - no error path
+            pass
+
+        def json(self):
+            return self._data
+
+    class DummyClient:
+        def __init__(self, *args, **kwargs):
+            captured["headers"] = kwargs.get("headers", {})
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb) -> None:
+            pass
+
+        async def get(self, path: str):
+            if path == "/repos/o/r/pulls/1":
+                return DummyResponse({"head": {"sha": "abc"}})
+            return DummyResponse({"check_runs": []})
+
+    monkeypatch.setattr("f2clipboard.codex_task.httpx.AsyncClient", DummyClient)
+    asyncio.run(_fetch_check_runs("https://github.com/o/r/pull/1", "tok"))
+    assert captured["headers"]["Authorization"] == "Bearer tok"
+
+
 def test_decode_log_handles_gzip():
     data = gzip.compress(b"hello")
     assert _decode_log(data) == "hello"
