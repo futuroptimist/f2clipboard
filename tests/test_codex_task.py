@@ -67,6 +67,39 @@ def test_fetch_check_runs_parses_response(monkeypatch):
     assert runs == [{"id": 99, "name": "CI"}]
 
 
+def test_fetch_check_runs_includes_token(monkeypatch):
+    captured: dict[str, dict[str, str]] = {}
+
+    class DummyResponse:
+        def __init__(self, data):
+            self._data = data
+
+        def raise_for_status(self) -> None:  # pragma: no cover - no error path
+            pass
+
+        def json(self):
+            return self._data
+
+    class DummyClient:
+        def __init__(self, *args, **kwargs):
+            captured["headers"] = kwargs.get("headers", {})
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb) -> None:
+            pass
+
+        async def get(self, path: str):
+            if path == "/repos/o/r/pulls/1":
+                return DummyResponse({"head": {"sha": "abc"}})
+            return DummyResponse({"check_runs": []})
+
+    monkeypatch.setattr("f2clipboard.codex_task.httpx.AsyncClient", DummyClient)
+    asyncio.run(_fetch_check_runs("https://github.com/o/r/pull/1", "tok"))
+    assert captured["headers"]["Authorization"] == "Bearer tok"
+
+
 def test_decode_log_handles_gzip():
     data = gzip.compress(b"hello")
     assert _decode_log(data) == "hello"
@@ -178,6 +211,16 @@ def test_codex_task_command_skips_clipboard(monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "MD" in out
     assert not copied
+
+
+def test_codex_task_command_overrides_threshold(monkeypatch, capsys):
+    async def fake_process(url: str, settings: Settings) -> str:
+        return str(settings.log_size_threshold)
+
+    monkeypatch.setattr("f2clipboard.codex_task._process_task", fake_process)
+    codex_task_command("http://task", copy_to_clipboard=False, log_size_threshold=1234)
+    out = capsys.readouterr().out
+    assert "1234" in out
 
 
 @pytest.mark.vcr()

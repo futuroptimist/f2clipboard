@@ -42,7 +42,7 @@ f2clipboard files --dir path/to/project
 ## Roadmap
 ### M0 (bootstrap)
 - [x] Ship basic CLI with `codex-task` command and help text.
-- [x] Support GitHub personal-access tokens via `.env`.
+- [x] Support GitHub personal-access tokens via `.env`. 💯
 - [x] Fetch PR URL from Codex task HTML (unauthenticated test page). 💯
 
 ### M1 (minimum lovable product)
@@ -54,7 +54,7 @@ f2clipboard files --dir path/to/project
 ### M2 (hardening)
 - [x] Playwright headless login for private Codex tasks. 💯
 - [x] Unit tests (pytest + `pytest-recording` vcr). 💯
-- [x] Secret scanning & redaction (via custom regex; GitHub `ghp_` and OpenAI `sk-` keys). 💯
+- [x] Secret scanning & redaction (via custom regex; GitHub `ghp_`/`github_pat_`, OpenAI `sk-`, and Slack `xoxb-` keys). 💯
 
 ### M3 (extensibility)
 - [x] Plugin interface (`entry_points = "f2clipboard.plugins"`). 💯
@@ -68,6 +68,7 @@ git clone https://github.com/futuroptimist/f2clipboard
 cd f2clipboard
 pip install -e ".[dev]"
 cp .env.example .env  # fill in your tokens
+# Set GITHUB_TOKEN to authenticate GitHub API requests
 # Set OPENAI_API_KEY or ANTHROPIC_API_KEY for log summarisation
 # Set CODEX_COOKIE to access private Codex tasks
 ```
@@ -83,6 +84,12 @@ To skip copying to the clipboard, pass ``--no-clipboard``:
 
 ```bash
 f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123 --no-clipboard
+```
+
+Adjust the log size threshold for summarisation with ``--log-size-threshold``:
+
+```bash
+f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123 --log-size-threshold 200000
 ```
 
 Generate a prompt that reads a shared chat transcript and implements any code or configuration

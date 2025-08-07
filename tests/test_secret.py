@@ -8,12 +8,21 @@ from f2clipboard.secret import redact_secrets
 def test_redact_secrets():
     token = "ghp_" + "a" * 36
     openai_token = "sk-" + "b" * 48
-    text = f"TOKEN=abcdef123456 {token} {openai_token}"  # pragma: allowlist secret
+    slack_token = "xoxb-" + "c" * 40
+    text = f"TOKEN=abcdef123456 {token} {openai_token} {slack_token}"  # pragma: allowlist secret
     redacted = redact_secrets(text)
     assert "abcdef123456" not in redacted  # pragma: allowlist secret
     assert "ghp_REDACTED" in redacted
     assert "TOKEN=***" in redacted
     assert "sk-REDACTED" in redacted
+    assert "xoxb-REDACTED" in redacted
+
+
+def test_redact_github_pat():
+    token = "github_pat_" + "c" * 50  # pragma: allowlist secret
+    redacted = redact_secrets(token)
+    assert "c" * 10 not in redacted  # pragma: allowlist secret
+    assert "github_pat_REDACTED" in redacted
 
 
 def test_process_task_redacts(monkeypatch):

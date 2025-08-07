@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import gzip
 import re
-from typing import Any
+from typing import Annotated, Any
 
 import clipboard
 import httpx
@@ -93,13 +93,23 @@ def _decode_log(data: bytes) -> str:
     return data.decode()
 
 
-async def _fetch_check_runs(pr_url: str, token: str | None) -> list[dict[str, Any]]:
-    """Return check runs for the PR's head commit using the GitHub REST API."""
-    owner, repo, number = _parse_pr_url(pr_url)
+def _github_headers(token: str | None) -> dict[str, str]:
+    """Return standard headers for GitHub API requests.
+
+    The Authorization header is included when a token is supplied.
+    """
     headers = {"Accept": "application/vnd.github+json"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    async with httpx.AsyncClient(base_url=GITHUB_API, headers=headers) as client:
+    return headers
+
+
+async def _fetch_check_runs(pr_url: str, token: str | None) -> list[dict[str, Any]]:
+    """Return check runs for the PR's head commit using the GitHub REST API."""
+    owner, repo, number = _parse_pr_url(pr_url)
+    async with httpx.AsyncClient(
+        base_url=GITHUB_API, headers=_github_headers(token)
+    ) as client:
         pr_resp = await client.get(f"/repos/{owner}/{repo}/pulls/{number}")
         pr_resp.raise_for_status()
         sha = pr_resp.json()["head"]["sha"]
@@ -126,12 +136,10 @@ async def _process_task(url: str, settings: Settings) -> str:
 
     check_runs = await _fetch_check_runs(pr_url, settings.github_token)
     owner, repo, _ = _parse_pr_url(pr_url)
-    headers = {"Accept": "application/vnd.github+json"}
-    if settings.github_token:
-        headers["Authorization"] = f"Bearer {settings.github_token}"
-
     sections: list[str] = []
-    async with httpx.AsyncClient(base_url=GITHUB_API, headers=headers) as client:
+    async with httpx.AsyncClient(
+        base_url=GITHUB_API, headers=_github_headers(settings.github_token)
+    ) as client:
         for run in check_runs:
             if run.get("conclusion") == "success":
                 continue
@@ -156,13 +164,27 @@ def codex_task_command(
         "--clipboard/--no-clipboard",
         help="Copy result to the system clipboard.",
     ),
+    log_size_threshold: Annotated[
+        int | None,
+        typer.Option(
+            "--log-size-threshold",
+            help="Summarise logs larger than this many bytes.",
+        ),
+    ] = None,
 ) -> None:
     """Parse a Codex task page and print any failing GitHub checks.
 
     The generated Markdown is copied to the clipboard unless ``--no-clipboard`` is passed.
+    Use ``--log-size-threshold`` to override the summarisation threshold.
     """
     typer.echo(f"Parsing Codex task page: {url}…")
     settings = Settings()  # load environment (e.g. GITHUB_TOKEN)
+    if log_size_threshold is not None:
+        settings.log_size_threshold = log_size_threshold
+    if log_size_threshold is not None:
+        settings = Settings(LOG_SIZE_THRESHOLD=log_size_threshold)
+    else:
+        settings = Settings()  # load environment (e.g. GITHUB_TOKEN)
     result = asyncio.run(_process_task(url, settings))
     if copy_to_clipboard:
         clipboard.copy(result)
