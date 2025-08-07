@@ -52,7 +52,7 @@ f2clipboard files --dir path/to/project
 - [x] Write Markdown artefact to `stdout` **and** clipboard. 💯
 
 ### M2 (hardening)
-- [ ] Playwright headless login for private Codex tasks.
+- [x] Playwright headless login for private Codex tasks. 💯
 - [x] Unit tests (pytest + `pytest-recording` vcr). 💯
 - [x] Secret scanning & redaction (via custom regex; GitHub `ghp_` and OpenAI `sk-` keys). 💯
 
@@ -69,6 +69,7 @@ cd f2clipboard
 pip install -e ".[dev]"
 cp .env.example .env  # fill in your tokens
 # Set OPENAI_API_KEY or ANTHROPIC_API_KEY for log summarisation
+# Set CODEX_COOKIE to access private Codex tasks
 ```
 
 Generate a Markdown snippet for a Codex task:

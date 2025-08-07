@@ -15,11 +15,42 @@ from .config import Settings
 from .llm import summarise_log
 from .secret import redact_secrets
 
+try:  # optional dependency for authenticated Codex tasks
+    from playwright.async_api import async_playwright
+except ImportError:  # pragma: no cover - Playwright may be missing
+    async_playwright = None  # type: ignore[assignment]
+
 GITHUB_API = "https://api.github.com"
 
 
-async def _fetch_task_html(url: str) -> str:
-    """Fetch raw HTML for a Codex task page."""
+async def _fetch_task_html(url: str, cookie: str | None = None) -> str:
+    """Fetch raw HTML for a Codex task page.
+
+    If ``cookie`` is provided, Playwright is used to inject the session cookie before
+    navigating to the page. Otherwise, a simple HTTP request is performed.
+    """
+    if cookie:
+        if async_playwright is None:  # pragma: no cover - import guard
+            raise RuntimeError("playwright is required for authenticated Codex tasks")
+        async with async_playwright() as pw:
+            browser = await pw.chromium.launch(headless=True)
+            context = await browser.new_context()
+            host = httpx.URL(url).host
+            await context.add_cookies(
+                [
+                    {
+                        "name": "codex_session",
+                        "value": cookie,
+                        "domain": host,
+                        "path": "/",
+                    }
+                ]
+            )
+            page = await context.new_page()
+            await page.goto(url)
+            html = await page.content()
+            await browser.close()
+            return html
     async with httpx.AsyncClient(follow_redirects=True) as client:
         response = await client.get(url)
         response.raise_for_status()
@@ -82,7 +113,7 @@ async def _download_log(
 
 async def _process_task(url: str, settings: Settings) -> str:
     """Download the task page, fetch failing check logs and return Markdown."""
-    html = await _fetch_task_html(url)
+    html = await _fetch_task_html(url, settings.codex_cookie)
     pr_url = _extract_pr_url(html)
     if not pr_url:
         return "PR URL not found"

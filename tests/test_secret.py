@@ -8,16 +8,16 @@ from f2clipboard.secret import redact_secrets
 def test_redact_secrets():
     token = "ghp_" + "a" * 36
     openai_token = "sk-" + "b" * 48
-    text = f"TOKEN=abcdef123456 {token} {openai_token}"
+    text = f"TOKEN=abcdef123456 {token} {openai_token}"  # pragma: allowlist secret
     redacted = redact_secrets(text)
-    assert "abcdef123456" not in redacted
+    assert "abcdef123456" not in redacted  # pragma: allowlist secret
     assert "ghp_REDACTED" in redacted
     assert "TOKEN=***" in redacted
     assert "sk-REDACTED" in redacted
 
 
 def test_process_task_redacts(monkeypatch):
-    async def fake_html(url: str) -> str:
+    async def fake_html(url: str, cookie: str | None = None) -> str:
         return '<a href="https://github.com/o/r/pull/1">PR</a>'
 
     async def fake_runs(pr_url: str, token: str | None):
@@ -27,7 +27,7 @@ def test_process_task_redacts(monkeypatch):
         return "TOKEN=abcdef123456"
 
     async def fake_summary(text: str, settings: Settings) -> str:
-        assert "abcdef123456" not in text
+        assert "abcdef123456" not in text  # pragma: allowlist secret
         return "SUMMARY"
 
     monkeypatch.setattr("f2clipboard.codex_task._fetch_task_html", fake_html)
@@ -38,5 +38,5 @@ def test_process_task_redacts(monkeypatch):
     settings = Settings()
     settings.log_size_threshold = 0
     result = asyncio.run(_process_task("http://task", settings))
-    assert "abcdef123456" not in result
+    assert "abcdef123456" not in result  # pragma: allowlist secret
     assert "SUMMARY" in result
