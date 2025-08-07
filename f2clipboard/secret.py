@@ -9,6 +9,7 @@ SECRET_PATTERNS: list[Pattern[str]] = [
     re.compile(r"ghp_[A-Za-z0-9]{36}"),
     re.compile(r"github_pat_[A-Za-z0-9_]{22,}"),
     re.compile(r"sk-[A-Za-z0-9]{32,}"),
+    re.compile(r"xox[baprs]-[A-Za-z0-9-]{10,}"),
     re.compile(
         r"(?i)(?P<key>[\w-]*(?:api|token|secret|password)[\w-]*)\s*(?P<sep>[:=])\s*(?P<value>[A-Za-z0-9-_.]{8,})"
     ),
@@ -29,6 +30,9 @@ def redact_secrets(text: str) -> str:
             return "github_pat_REDACTED"
         if token.startswith("sk-"):
             return "sk-REDACTED"
+        if token.startswith("xox"):
+            prefix = token.split("-", 1)[0]
+            return f"{prefix}-REDACTED"
         return "***"
 
     for pattern in SECRET_PATTERNS:

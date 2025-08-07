@@ -54,7 +54,7 @@ f2clipboard files --dir path/to/project
 ### M2 (hardening)
 - [x] Playwright headless login for private Codex tasks. 💯
 - [x] Unit tests (pytest + `pytest-recording` vcr). 💯
-- [x] Secret scanning & redaction (via custom regex; GitHub `ghp_`/`github_pat_` and OpenAI `sk-` keys). 💯
+- [x] Secret scanning & redaction (via custom regex; GitHub `ghp_`/`github_pat_`, OpenAI `sk-`, and Slack `xoxb-` keys). 💯
 
 ### M3 (extensibility)
 - [x] Plugin interface (`entry_points = "f2clipboard.plugins"`). 💯
@@ -83,6 +83,12 @@ To skip copying to the clipboard, pass ``--no-clipboard``:
 
 ```bash
 f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123 --no-clipboard
+```
+
+Adjust the log size threshold for summarisation with ``--log-size-threshold``:
+
+```bash
+f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123 --log-size-threshold 200000
 ```
 
 Generate a prompt that reads a shared chat transcript and implements any code or configuration
