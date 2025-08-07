@@ -18,6 +18,13 @@ def test_redact_secrets():
     assert "xoxb-REDACTED" in redacted
 
 
+def test_redact_github_pat():
+    token = "github_pat_" + "c" * 50  # pragma: allowlist secret
+    redacted = redact_secrets(token)
+    assert "c" * 10 not in redacted  # pragma: allowlist secret
+    assert "github_pat_REDACTED" in redacted
+
+
 def test_process_task_redacts(monkeypatch):
     async def fake_html(url: str, cookie: str | None = None) -> str:
         return '<a href="https://github.com/o/r/pull/1">PR</a>'
