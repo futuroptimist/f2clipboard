@@ -20,6 +20,11 @@ def files_command(
         typer.echo("Legacy script not found: f2clipboard.py", err=True)
         raise typer.Exit(code=1)
 
+    dir_path = Path(directory)
+    if not dir_path.exists():
+        typer.echo(f"Directory not found: {directory}", err=True)
+        raise typer.Exit(code=1)
+
     spec = spec_from_file_location("legacy_f2clipboard", script_path)
     if spec is None or spec.loader is None:  # pragma: no cover - importlib error
         typer.echo("Could not load legacy f2clipboard script", err=True)

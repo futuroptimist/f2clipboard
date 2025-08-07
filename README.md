@@ -90,6 +90,8 @@ Copy selected files from a local repository:
 f2clipboard files --dir path/to/project
 ```
 
+Providing a non-existent directory prints an error and exits with a non-zero status.
+
 ## Plugins
 
 f2clipboard loads plugins registered under the `f2clipboard.plugins` entry-point group. A plugin
