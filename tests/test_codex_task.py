@@ -180,6 +180,16 @@ def test_codex_task_command_skips_clipboard(monkeypatch, capsys):
     assert not copied
 
 
+def test_codex_task_command_overrides_threshold(monkeypatch, capsys):
+    async def fake_process(url: str, settings: Settings) -> str:
+        return f"threshold {settings.log_size_threshold}"
+
+    monkeypatch.setattr("f2clipboard.codex_task._process_task", fake_process)
+    codex_task_command("http://task", log_size_threshold=123, copy_to_clipboard=False)
+    out = capsys.readouterr().out
+    assert "threshold 123" in out
+
+
 @pytest.mark.vcr()
 def test_fetch_task_html_records_example():
     html = asyncio.run(_fetch_task_html("https://example.com"))
