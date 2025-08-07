@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import re
 
 import clipboard
@@ -9,10 +10,10 @@ import httpx
 import typer
 
 
-def _extract_text(html: str) -> str:
+def _extract_text(html_text: str) -> str:
     """Return plain text from HTML."""
-    text = re.sub(r"<[^>]+>", "", html)
-    return text.strip()
+    text = re.sub(r"<[^>]+>", "", html_text)
+    return html.unescape(text).strip()
 
 
 def _fetch_transcript(url: str) -> str:
