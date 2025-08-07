@@ -87,13 +87,23 @@ def _decode_log(data: bytes) -> str:
     return data.decode()
 
 
-async def _fetch_check_runs(pr_url: str, token: str | None) -> list[dict[str, Any]]:
-    """Return check runs for the PR's head commit using the GitHub REST API."""
-    owner, repo, number = _parse_pr_url(pr_url)
+def _github_headers(token: str | None) -> dict[str, str]:
+    """Return standard headers for GitHub API requests.
+
+    The Authorization header is included when a token is supplied.
+    """
     headers = {"Accept": "application/vnd.github+json"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    async with httpx.AsyncClient(base_url=GITHUB_API, headers=headers) as client:
+    return headers
+
+
+async def _fetch_check_runs(pr_url: str, token: str | None) -> list[dict[str, Any]]:
+    """Return check runs for the PR's head commit using the GitHub REST API."""
+    owner, repo, number = _parse_pr_url(pr_url)
+    async with httpx.AsyncClient(
+        base_url=GITHUB_API, headers=_github_headers(token)
+    ) as client:
         pr_resp = await client.get(f"/repos/{owner}/{repo}/pulls/{number}")
         pr_resp.raise_for_status()
         sha = pr_resp.json()["head"]["sha"]
@@ -120,12 +130,10 @@ async def _process_task(url: str, settings: Settings) -> str:
 
     check_runs = await _fetch_check_runs(pr_url, settings.github_token)
     owner, repo, _ = _parse_pr_url(pr_url)
-    headers = {"Accept": "application/vnd.github+json"}
-    if settings.github_token:
-        headers["Authorization"] = f"Bearer {settings.github_token}"
-
     sections: list[str] = []
-    async with httpx.AsyncClient(base_url=GITHUB_API, headers=headers) as client:
+    async with httpx.AsyncClient(
+        base_url=GITHUB_API, headers=_github_headers(settings.github_token)
+    ) as client:
         for run in check_runs:
             if run.get("conclusion") == "success":
                 continue
