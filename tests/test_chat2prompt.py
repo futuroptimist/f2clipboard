@@ -8,6 +8,11 @@ def test_extract_text_removes_html():
     assert _extract_text(html) == "Hello World"
 
 
+def test_extract_text_unescapes_entities():
+    html = "Tom &amp; Jerry"
+    assert _extract_text(html) == "Tom & Jerry"
+
+
 def test_chat2prompt_command_copies_prompt(monkeypatch, capsys):
     def fake_fetch(url: str) -> str:
         assert url == "http://chat"
