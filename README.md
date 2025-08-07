@@ -90,6 +90,12 @@ Copy selected files from a local repository:
 f2clipboard files --dir path/to/project
 ```
 
+Check the installed version:
+
+```bash
+f2clipboard --version
+```
+
 ## Plugins
 
 f2clipboard loads plugins registered under the `f2clipboard.plugins` entry-point group. A plugin

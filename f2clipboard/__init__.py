@@ -1,6 +1,7 @@
 import logging
 from importlib.metadata import PackageNotFoundError, entry_points, version
 
+import typer
 from typer import Typer
 
 from .codex_task import codex_task_command
@@ -14,6 +15,27 @@ except PackageNotFoundError:  # pragma: no cover
 app = Typer(add_completion=False, help="Flows \u2192 clipboard automation CLI")
 app.command("codex-task")(codex_task_command)
 app.command("files")(files_command)
+
+
+def _version_callback(value: bool) -> None:
+    """Print the package version and exit."""
+    if value:
+        typer.echo(__version__)
+        raise typer.Exit()
+
+
+@app.callback()
+def _main(
+    version: bool = typer.Option(
+        False,
+        "--version",
+        help="Show the application's version and exit.",
+        callback=_version_callback,
+        is_eager=True,
+    ),
+) -> None:
+    """Main entry point handling global options."""
+    return
 
 
 def _load_plugins() -> None:
