@@ -58,8 +58,14 @@ async def _fetch_task_html(url: str, cookie: str | None = None) -> str:
 
 
 def _extract_pr_url(html: str) -> str | None:
-    """Return the first GitHub PR URL found in the given HTML."""
-    match = re.search(r'href="(https://github.com/[^"]+/pull/\d+)"', html)
+    """Return the first GitHub PR URL found in the given HTML.
+
+    The Codex task page includes a "View PR" link pointing to the associated
+    GitHub pull request. Codex's markup may use single or double quotes around
+    attribute values, so the regular expression accounts for both variants.
+    """
+
+    match = re.search(r"href=['\"](https://github.com/[^'\"]+/pull/\d+)['\"]", html)
     return match.group(1) if match else None
 
 

@@ -43,7 +43,7 @@ f2clipboard files --dir path/to/project
 ### M0 (bootstrap)
 - [x] Ship basic CLI with `codex-task` command and help text.
 - [x] Support GitHub personal-access tokens via `.env`. 💯
-- [x] Fetch PR URL from Codex task HTML (unauthenticated test page).
+- [x] Fetch PR URL from Codex task HTML (unauthenticated test page). 💯
 
 ### M1 (minimum lovable product)
 - [x] Parse check-suites with GitHub REST v3. 💯
