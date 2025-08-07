@@ -76,6 +76,7 @@ Generate a Markdown snippet for a Codex task:
 
 ```bash
 f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123
+pbpaste > failing-checks.md  # Linux: xclip -o -selection clipboard > failing-checks.md
 ```
 
 The resulting Markdown is printed to your terminal and copied to the clipboard.
