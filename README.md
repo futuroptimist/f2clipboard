@@ -84,6 +84,19 @@ To skip copying to the clipboard, pass ``--no-clipboard``:
 f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123 --no-clipboard
 ```
 
+Generate a prompt that reads a shared chat transcript and implements any code or configuration
+changes it mentions:
+
+```bash
+f2clipboard chat2prompt https://chatgpt.com/share/abcdefg
+```
+
+Specify a different platform with ``--platform``:
+
+```bash
+f2clipboard chat2prompt https://chatgpt.com/share/abcdefg --platform anthropic
+```
+
 Copy selected files from a local repository:
 
 ```bash
