@@ -161,8 +161,12 @@ def codex_task_command(
     """Parse a Codex task page and print any failing GitHub checks.
 
     The generated Markdown is copied to the clipboard unless ``--no-clipboard`` is passed.
+    Use ``--log-size-threshold`` to override the summarisation threshold.
     """
     typer.echo(f"Parsing Codex task page: {url}…")
+    settings = Settings()  # load environment (e.g. GITHUB_TOKEN)
+    if log_size_threshold is not None:
+        settings.log_size_threshold = log_size_threshold
     if log_size_threshold is not None:
         settings = Settings(LOG_SIZE_THRESHOLD=log_size_threshold)
     else:
