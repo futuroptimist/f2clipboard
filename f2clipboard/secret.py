@@ -7,6 +7,7 @@ from typing import Pattern
 
 SECRET_PATTERNS: list[Pattern[str]] = [
     re.compile(r"ghp_[A-Za-z0-9]{36}"),
+    re.compile(r"github_pat_[A-Za-z0-9_]{22,}"),
     re.compile(r"sk-[A-Za-z0-9]{32,}"),
     re.compile(
         r"(?i)(?P<key>[\w-]*(?:api|token|secret|password)[\w-]*)\s*(?P<sep>[:=])\s*(?P<value>[A-Za-z0-9-_.]{8,})"
@@ -24,6 +25,8 @@ def redact_secrets(text: str) -> str:
         token = match.group(0)
         if token.startswith("ghp_"):
             return "ghp_REDACTED"
+        if token.startswith("github_pat_"):
+            return "github_pat_REDACTED"
         if token.startswith("sk-"):
             return "sk-REDACTED"
         return "***"
