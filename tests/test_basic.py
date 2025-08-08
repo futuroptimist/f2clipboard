@@ -1,3 +1,4 @@
+import re
 import subprocess
 import sys
 
@@ -54,10 +55,11 @@ def test_codex_task_help():
         text=True,
     )
     assert result.returncode == 0
-    assert "Parse a Codex task page" in result.stdout
-    assert "--clipboard" in result.stdout
-    assert "--no-clipboard" in result.stdout
-    assert "--log-size-threshold" in result.stdout
+    clean_output = re.sub(r"\x1B\[[0-?]*[ -/]*[@-~]", "", result.stdout)
+    assert "Parse a Codex task page" in clean_output
+    assert "--clipboard" in clean_output
+    assert "--no-clipboard" in clean_output
+    assert "--log-size-threshold" in clean_output
 
 
 def test_settings_env(tmp_path, monkeypatch):
