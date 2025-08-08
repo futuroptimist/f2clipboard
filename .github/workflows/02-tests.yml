@@ -10,8 +10,8 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      - run: uv pip install --system -e .
-      - run: uv pip install --system pytest flake8 black clipboard coverage pytest-cov
+      - run: uv pip install --system -e .[dev]
+      - run: uv pip install --system coverage pytest-cov
       - run: black --check f2clipboard.py tests
       - run: flake8
       - run: pytest --cov=f2clipboard --cov=tests -q
