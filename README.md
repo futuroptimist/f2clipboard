@@ -59,7 +59,7 @@ f2clipboard files --dir path/to/project
 ### M3 (extensibility)
 - [x] Plugin interface (`entry_points = "f2clipboard.plugins"`). 💯
 - [x] First plugin: Jira ticket summariser. 💯
-- [ ] VS Code task provider / GitHub Action marketplace listing.
+- [x] VS Code task provider / GitHub Action marketplace listing. 💯
 
 ## Getting Started
 
@@ -117,6 +117,18 @@ Check the installed version:
 ```bash
 f2clipboard --version
 ```
+
+## GitHub Action
+
+Run `f2clipboard` inside GitHub Actions using the bundled composite action:
+
+```yaml
+- uses: futuroptimist/f2clipboard@v1
+  with:
+    args: codex-task https://chatgpt.com/codex/tasks/task_123 --no-clipboard
+```
+
+Pass any CLI arguments via `args`; the default is `--help`.
 
 ## Plugins
 

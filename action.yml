@@ -1,0 +1,21 @@
+name: 'f2clipboard'
+description: 'Run f2clipboard CLI in GitHub Actions'
+author: 'futuroptimist'
+inputs:
+  args:
+    description: 'Arguments passed to f2clipboard'
+    required: false
+    default: '--help'
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - run: pip install .
+      shell: bash
+    - run: f2clipboard ${{ inputs.args }}
+      shell: bash
+branding:
+  icon: 'clipboard'
+  color: 'blue'
