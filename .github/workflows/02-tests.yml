@@ -11,7 +11,7 @@ jobs:
         with:
           python-version: '3.x'
       - run: uv pip install --system -e .
-      - run: uv pip install --system pytest flake8 black clipboard coverage pytest-cov
+      - run: uv pip install --system pytest flake8 black clipboard coverage pytest-cov pyyaml
       - run: black --check f2clipboard.py tests
       - run: flake8
       - run: pytest --cov=f2clipboard --cov=tests -q
