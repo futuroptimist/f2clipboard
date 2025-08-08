@@ -25,6 +25,13 @@ def test_redact_github_pat():
     assert "github_pat_REDACTED" in redacted
 
 
+def test_redact_preserves_whitespace():
+    text = "TOKEN = abcdef123456\napi_key:\tsecret1234"  # pragma: allowlist secret
+    redacted = redact_secrets(text)
+    assert "TOKEN = ***" in redacted
+    assert "api_key:\t***" in redacted
+
+
 def test_process_task_redacts(monkeypatch):
     async def fake_html(url: str, cookie: str | None = None) -> str:
         return '<a href="https://github.com/o/r/pull/1">PR</a>'
