@@ -49,7 +49,8 @@ def test_codex_task_help():
     result = runner.invoke(
         app,
         ["codex-task", "--help"],
-        env={"COLUMNS": "80", "NO_COLOR": "1"},
+        env={"COLUMNS": "120"},
+        color=False,
     )
     assert result.exit_code == 0
     stdout = result.stdout
