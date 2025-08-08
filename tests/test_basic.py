@@ -42,18 +42,13 @@ def test_cli_version():
 
 
 def test_codex_task_help():
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "f2clipboard.cli",
-            "codex-task",
-            "--help",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0
+    from typer.testing import CliRunner
+
+    from f2clipboard import app
+
+    runner = CliRunner()
+    result = runner.invoke(app, ["codex-task", "--help"])
+    assert result.exit_code == 0
     assert "Parse a Codex task page" in result.stdout
     assert "--clipboard" in result.stdout
     assert "--no-clipboard" in result.stdout
