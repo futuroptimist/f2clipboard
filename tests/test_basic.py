@@ -1,8 +1,12 @@
 import subprocess
 import sys
 
-from f2clipboard import __version__
+from typer.testing import CliRunner
+
+from f2clipboard import __version__, app
 from f2clipboard.config import Settings
+
+runner = CliRunner()
 
 
 def test_version_string():
@@ -42,22 +46,17 @@ def test_cli_version():
 
 
 def test_codex_task_help():
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "f2clipboard.cli",
-            "codex-task",
-            "--help",
-        ],
-        capture_output=True,
-        text=True,
+    result = runner.invoke(
+        app,
+        ["codex-task", "--help"],
+        env={"COLUMNS": "80", "NO_COLOR": "1"},
     )
-    assert result.returncode == 0
-    assert "Parse a Codex task page" in result.stdout
-    assert "--clipboard" in result.stdout
-    assert "--no-clipboard" in result.stdout
-    assert "--log-size-threshold" in result.stdout
+    assert result.exit_code == 0
+    stdout = result.stdout
+    assert "Parse a Codex task page" in stdout
+    assert "--clipboard" in stdout
+    assert "--no-clipboard" in stdout
+    assert "--log-size-threshold" in stdout
 
 
 def test_settings_env(tmp_path, monkeypatch):
