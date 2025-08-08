@@ -24,6 +24,7 @@ dev = [
     "flake8",
     "black",
     "isort",
+    "pyyaml",
 ]
 
 [project.scripts]
