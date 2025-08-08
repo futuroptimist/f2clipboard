@@ -11,18 +11,27 @@ SECRET_PATTERNS: list[Pattern[str]] = [
     re.compile(r"sk-[A-Za-z0-9]{32,}"),
     re.compile(r"xox[baprs]-[A-Za-z0-9-]{10,}"),
     re.compile(
-        r"(?i)(?P<key>[\w-]*(?:api|token|secret|password)[\w-]*)\s*(?P<sep>[:=])\s*(?P<value>[A-Za-z0-9-_.]{8,})"
+        r"(?i)(?P<key>[\w-]*(?:api|token|secret|password)[\w-]*)"
+        r"(?P<pre>\s*)(?P<sep>[:=])(?P<post>\s*)"
+        r"(?P<value>[A-Za-z0-9-_.]{8,})"
     ),
 ]
 
 
 def redact_secrets(text: str) -> str:
-    """Return *text* with known secret patterns replaced by placeholders."""
+    """Return *text* with known secret patterns replaced by placeholders.
+
+    Whitespace around ``:`` or ``=`` in environment-style assignments is preserved
+    to keep formatting intact.
+    """
 
     def _repl(match: re.Match[str]) -> str:
         groups = match.groupdict()
         if "key" in groups:
-            return f"{groups['key']}{groups['sep']}***"
+            return (
+                f"{groups['key']}{groups.get('pre', '')}{groups['sep']}"
+                f"{groups.get('post', '')}***"
+            )
         token = match.group(0)
         if token.startswith("ghp_"):
             return "ghp_REDACTED"
