@@ -223,6 +223,24 @@ def test_codex_task_command_overrides_threshold(monkeypatch, capsys):
     assert "1234" in out
 
 
+def test_codex_task_command_initialises_settings_once(monkeypatch):
+    calls: list[int | None] = []
+
+    class DummySettings:
+        def __init__(self, LOG_SIZE_THRESHOLD: int = 150_000):
+            calls.append(LOG_SIZE_THRESHOLD)
+            self.log_size_threshold = LOG_SIZE_THRESHOLD
+
+    async def fake_process(url: str, settings: DummySettings) -> str:
+        return ""
+
+    monkeypatch.setattr("f2clipboard.codex_task.Settings", DummySettings)
+    monkeypatch.setattr("f2clipboard.codex_task._process_task", fake_process)
+
+    codex_task_command("http://task", copy_to_clipboard=False, log_size_threshold=5)
+    assert calls == [5]
+
+
 @pytest.mark.vcr()
 def test_fetch_task_html_records_example():
     html = asyncio.run(_fetch_task_html("https://example.com"))
