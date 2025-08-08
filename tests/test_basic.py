@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 
@@ -52,6 +53,7 @@ def test_codex_task_help():
         ],
         capture_output=True,
         text=True,
+        env={**os.environ, "COLUMNS": "1"},
     )
     assert result.returncode == 0
     assert "Parse a Codex task page" in result.stdout
