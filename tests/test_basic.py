@@ -1,6 +1,7 @@
 import subprocess
 import sys
 
+from click.utils import strip_ansi
 from typer.testing import CliRunner
 
 from f2clipboard import __version__, app
@@ -52,7 +53,7 @@ def test_codex_task_help():
         env={"COLUMNS": "80", "NO_COLOR": "1"},
     )
     assert result.exit_code == 0
-    stdout = result.stdout
+    stdout = strip_ansi(result.stdout)
     assert "Parse a Codex task page" in stdout
     assert "--clipboard" in stdout
     assert "--no-clipboard" in stdout
