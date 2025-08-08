@@ -1,8 +1,10 @@
 import logging
+import shutil
 from importlib.metadata import PackageNotFoundError, entry_points, version
 
 import typer
-from typer import Typer
+from rich.console import Console
+from typer import Typer, rich_utils
 
 from .chat2prompt import chat2prompt_command
 from .codex_task import codex_task_command
@@ -12,6 +14,16 @@ try:
     __version__ = version("f2clipboard")
 except PackageNotFoundError:  # pragma: no cover
     __version__ = "0.0.0+dev"
+
+# Ensure CLI help renders at a reasonable width even when the terminal reports
+# an extremely small value (e.g. ``COLUMNS=1``). Typer uses a global Rich
+# console for formatting help text, and Rich clamps the width to the detected
+# terminal size. Calculate a safe minimum width and replace the default console
+# so option strings like ``--clipboard`` are not split across lines.
+_MIN_WIDTH = 80
+_width = max(shutil.get_terminal_size(fallback=(_MIN_WIDTH, 24)).columns, _MIN_WIDTH)
+rich_utils.console = Console(width=_width)
+rich_utils.MAX_WIDTH = _width
 
 app = Typer(add_completion=False, help="Flows \u2192 clipboard automation CLI")
 app.command("codex-task")(codex_task_command)
