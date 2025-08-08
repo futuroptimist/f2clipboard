@@ -1,12 +1,16 @@
 import logging
+import os
 from importlib.metadata import PackageNotFoundError, entry_points, version
 
-import typer
-from typer import Typer
+# Ensure Rich renders help at a reasonable width even in narrow environments
+os.environ.setdefault("TERMINAL_WIDTH", "80")
 
-from .chat2prompt import chat2prompt_command
-from .codex_task import codex_task_command
-from .files import files_command
+import typer  # noqa: E402
+from typer import Typer  # noqa: E402
+
+from .chat2prompt import chat2prompt_command  # noqa: E402
+from .codex_task import codex_task_command  # noqa: E402
+from .files import files_command  # noqa: E402
 
 try:
     __version__ = version("f2clipboard")

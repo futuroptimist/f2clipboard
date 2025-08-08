@@ -81,7 +81,8 @@ f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123
 ```
 
 The resulting Markdown is printed to your terminal and copied to the clipboard.
-For a list of available options, run ``f2clipboard codex-task --help``.
+For a list of available options, run ``f2clipboard codex-task --help``. The CLI enforces a minimum
+help width of 80 characters so options render correctly in narrow environments such as CI.
 To skip copying to the clipboard, pass ``--no-clipboard``:
 
 ```bash
