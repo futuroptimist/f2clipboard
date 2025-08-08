@@ -13,6 +13,7 @@ dependencies = [
     "pydantic-settings>=2.0",
     "httpx",
     "playwright",
+    "pyyaml",
 ]
 
 [project.optional-dependencies]
