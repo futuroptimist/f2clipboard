@@ -41,7 +41,7 @@ f2clipboard files --dir path/to/project
 
 ## Roadmap
 ### M0 (bootstrap)
-- [x] Ship basic CLI with `codex-task` command and help text.
+- [x] Ship basic CLI with `codex-task` command and help text. 💯
 - [x] Support GitHub personal-access tokens via `.env`. 💯
 - [x] Fetch PR URL from Codex task HTML (unauthenticated test page). 💯
 
@@ -80,6 +80,7 @@ f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123
 ```
 
 The resulting Markdown is printed to your terminal and copied to the clipboard.
+For a list of available options, run ``f2clipboard codex-task --help``.
 To skip copying to the clipboard, pass ``--no-clipboard``:
 
 ```bash

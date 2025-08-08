@@ -41,6 +41,25 @@ def test_cli_version():
     assert __version__ in result.stdout
 
 
+def test_codex_task_help():
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "f2clipboard.cli",
+            "codex-task",
+            "--help",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert "Parse a Codex task page" in result.stdout
+    assert "--clipboard" in result.stdout
+    assert "--no-clipboard" in result.stdout
+    assert "--log-size-threshold" in result.stdout
+
+
 def test_settings_env(tmp_path, monkeypatch):
     env_file = tmp_path / ".env"
     env_file.write_text(
