@@ -18,6 +18,18 @@ app.command("codex-task")(codex_task_command)
 app.command("chat2prompt")(chat2prompt_command)
 app.command("files")(files_command)
 
+_loaded_plugins: list[str] = []
+
+
+@app.command("plugins")
+def plugins_command() -> None:
+    """List registered plugin names."""
+    if not _loaded_plugins:
+        typer.echo("No plugins installed")
+        return
+    for name in _loaded_plugins:
+        typer.echo(name)
+
 
 def _version_callback(value: bool) -> None:
     """Print the package version and exit."""
@@ -46,6 +58,8 @@ def _load_plugins() -> None:
         try:
             plugin = ep.load()
             plugin(app)
+            if ep.name not in _loaded_plugins:
+                _loaded_plugins.append(ep.name)
         except Exception as exc:  # pragma: no cover - defensive
             logging.getLogger(__name__).warning(
                 "Failed to load plugin %s: %s", ep.name, exc

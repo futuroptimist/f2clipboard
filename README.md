@@ -61,6 +61,7 @@ f2clipboard files --dir path/to/project
 - [x] Plugin interface (`entry_points = "f2clipboard.plugins"`). 💯
 - [x] First plugin: Jira ticket summariser. 💯
 - [x] VS Code task provider / GitHub Action marketplace listing. 💯
+- [x] CLI command to list registered plugins. 💯
 
 ## Getting Started
 
@@ -142,6 +143,12 @@ exposes a callable that receives the Typer app and can register additional comma
 ```toml
 [project.entry-points."f2clipboard.plugins"]
 hello = "my_package.plugin:register"
+```
+
+List installed plugins:
+
+```bash
+f2clipboard plugins
 ```
 
 The first bundled plugin summarises Jira issues:
