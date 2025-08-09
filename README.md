@@ -17,8 +17,8 @@ Parse the Codex task page (authenticated session or scraped HTML via Playwright)
 
 Locate the linked GitHub PR (“View PR” button).
 
-Normalise the PR link by dropping any query parameters or fragments before
-calling the GitHub API.
+Normalise the PR link by dropping any query parameters, fragments or trailing
+slashes before calling the GitHub API.
 
 Query the GitHub API for the check-suite:
 
@@ -57,7 +57,9 @@ f2clipboard files --dir path/to/project
 ### M2 (hardening)
 - [x] Playwright headless login for private Codex tasks. 💯
 - [x] Unit tests (pytest + `pytest-recording` vcr). 💯
-- [x] Secret scanning & redaction (via custom regex; GitHub `ghp_`/`github_pat_`, OpenAI
+- [x] Secret scanning & redaction (via custom regex; GitHub
+  `ghp_`/`gho_`/`ghu_`/`ghs_`/`ghr_`/`github_pat_`, OpenAI `sk-`, Slack `xoxb-`,
+  and `Bearer` tokens) while preserving whitespace around `=` and `:`. 💯
 - [x] AWS access key redaction. 💯
 - [x] `sk-`, Slack `xox*`, and `Bearer` tokens) while preserving whitespace around `=` and `:`. 💯
 
