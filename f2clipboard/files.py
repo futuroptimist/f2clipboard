@@ -13,6 +13,11 @@ def files_command(
     pattern: str = typer.Option(
         "*", "--pattern", help="File glob pattern to match (e.g. *.py)"
     ),
+    exclude: list[str] = typer.Option(
+        [],
+        "--exclude",
+        help="Additional glob patterns to ignore (can be used multiple times)",
+    ),
 ) -> None:
     """Invoke the legacy script to copy selected files to the clipboard."""
     script_path = Path(__file__).resolve().parent.parent / "f2clipboard.py"
@@ -27,4 +32,7 @@ def files_command(
 
     module = module_from_spec(spec)
     spec.loader.exec_module(module)
-    module.main(["--dir", directory, "--pattern", pattern])
+    argv = ["--dir", directory, "--pattern", pattern]
+    for pat in exclude:
+        argv.extend(["--exclude", pat])
+    module.main(argv)
