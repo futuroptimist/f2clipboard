@@ -62,20 +62,24 @@ def _extract_pr_url(html: str) -> str | None:
 
     The Codex task page includes a "View PR" link pointing to the associated
     GitHub pull request. Codex's markup may use single or double quotes around
-    attribute values, so the regular expression accounts for both variants.
+    attribute values and may include a trailing slash, so the regular
+    expression accounts for these variants.
     """
 
     match = re.search(
-        r"href=['\"](https://github.com/[^'\"?#]+/pull/\d+)(?:[?#][^'\"]*)?['\"]",
+        r"href=['\"](https://github.com/[^'\"?#]+/pull/\d+)(?:/)?(?:[?#][^'\"]*)?['\"]",
         html,
     )
     return match.group(1) if match else None
 
 
 def _parse_pr_url(pr_url: str) -> tuple[str, str, int]:
-    """Extract owner, repo and pull number from a PR URL."""
+    """Extract owner, repo and pull number from a PR URL.
+
+    Trailing slashes are tolerated and ignored.
+    """
     pattern = (
-        r"https://github.com/(?P<owner>[^/]+)/(?P<repo>[^/]+)/pull/(?P<number>\d+)"
+        r"https://github.com/(?P<owner>[^/]+)/(?P<repo>[^/]+)/pull/(?P<number>\d+)/?"
     )
     match = re.match(pattern, pr_url)
     if not match:  # pragma: no cover - defensive programming
