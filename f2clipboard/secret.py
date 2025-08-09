@@ -11,6 +11,7 @@ SECRET_PATTERNS: list[Pattern[str]] = [
     re.compile(r"sk-[A-Za-z0-9]{32,}"),
     re.compile(r"xox[baprs]-[A-Za-z0-9-]{10,}"),
     re.compile(r"(?:ASIA|AKIA)[0-9A-Z]{16}"),
+    re.compile(r"(?i)Bearer\s+[A-Za-z0-9._-]{8,}"),
     re.compile(
         r"(?i)(?P<key>[\w-]*(?:api|token|secret|password)[\w-]*)"
         r"(?P<pre>\s*)(?P<sep>[:=])(?P<post>\s*)"
@@ -45,6 +46,8 @@ def redact_secrets(text: str) -> str:
             return f"{prefix}-REDACTED"
         if token.startswith("AKIA") or token.startswith("ASIA"):
             return f"{token[:4]}_REDACTED"
+        if token.lower().startswith("bearer "):
+            return "Bearer ***"
         return "***"
 
     for pattern in SECRET_PATTERNS:

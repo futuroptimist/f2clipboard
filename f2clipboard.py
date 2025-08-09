@@ -237,6 +237,12 @@ def build_parser():
     parser.add_argument(
         "--pattern", default="*", help="File glob pattern to match (e.g. *.py or *.py)"
     )
+    parser.add_argument(
+        "--exclude",
+        action="append",
+        default=[],
+        help="Additional glob patterns to ignore (may be repeated)",
+    )
     return parser
 
 
@@ -246,6 +252,8 @@ def main(argv=None):
     directory = args.dir
     pattern = args.pattern
     ignore_patterns = parse_gitignore()
+    if args.exclude:
+        ignore_patterns.extend(args.exclude)
     files = list_files(directory, pattern, ignore_patterns)
     selected_files = select_files(files)
 

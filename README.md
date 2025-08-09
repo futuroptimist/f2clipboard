@@ -17,6 +17,9 @@ Parse the Codex task page (authenticated session or scraped HTML via Playwright)
 
 Locate the linked GitHub PR (“View PR” button).
 
+Normalise the PR link by dropping any query parameters or fragments before
+calling the GitHub API.
+
 Query the GitHub API for the check-suite:
 
 For every failed check → download full raw logs.
@@ -55,13 +58,17 @@ f2clipboard files --dir path/to/project
 - [x] Playwright headless login for private Codex tasks. 💯
 - [x] Unit tests (pytest + `pytest-recording` vcr). 💯
 - [x] Secret scanning & redaction (via custom regex; GitHub `ghp_`/`github_pat_`, OpenAI
-  `sk-`, and Slack `xoxb-` keys) while preserving whitespace around `=` and `:`. 💯
 - [x] AWS access key redaction. 💯
+- [x] `sk-`, Slack `xoxb-`, and `Bearer` tokens) while preserving whitespace around `=` and `:`. 💯
 
 ### M3 (extensibility)
 - [x] Plugin interface (`entry_points = "f2clipboard.plugins"`). 💯
 - [x] First plugin: Jira ticket summariser. 💯
 - [x] VS Code task provider / GitHub Action marketplace listing. 💯
+- [x] CLI command to list registered plugins. 💯
+
+### M4 (quality of life)
+- [x] Support excluding file patterns in `files` command via `--exclude`. 💯
 
 ## Getting Started
 
@@ -105,6 +112,8 @@ changes it mentions:
 f2clipboard chat2prompt https://chatgpt.com/share/abcdefg
 ```
 
+HTML tags are stripped and block-level elements become newlines to preserve chat formatting.
+
 Specify a different platform with ``--platform``:
 
 ```bash
@@ -115,6 +124,12 @@ Copy selected files from a local repository:
 
 ```bash
 f2clipboard files --dir path/to/project
+```
+
+Exclude glob patterns by repeating `--exclude`:
+
+```bash
+f2clipboard files --dir path/to/project --exclude 'node_modules/*' --exclude '*.log'
 ```
 
 Check the installed version:
@@ -143,6 +158,12 @@ exposes a callable that receives the Typer app and can register additional comma
 ```toml
 [project.entry-points."f2clipboard.plugins"]
 hello = "my_package.plugin:register"
+```
+
+List installed plugins:
+
+```bash
+f2clipboard plugins
 ```
 
 The first bundled plugin summarises Jira issues:
