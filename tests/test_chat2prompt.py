@@ -13,6 +13,11 @@ def test_extract_text_unescapes_entities():
     assert _extract_text(html) == "Tom & Jerry"
 
 
+def test_extract_text_preserves_line_breaks():
+    html = "<p>Hello</p><p>World</p>"
+    assert _extract_text(html) == "Hello\nWorld"
+
+
 def test_chat2prompt_command_copies_prompt(monkeypatch, capsys):
     def fake_fetch(url: str) -> str:
         assert url == "http://chat"
