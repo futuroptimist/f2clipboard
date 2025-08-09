@@ -80,7 +80,10 @@ def expand_pattern(pattern):
 
     prefix = pattern[: pattern.find("{")]
     suffix = pattern[pattern.find("}") + 1 :]
-    options = pattern[pattern.find("{") + 1 : pattern.find("}")].split(",")
+    options = [
+        opt.strip()
+        for opt in pattern[pattern.find("{") + 1 : pattern.find("}")].split(",")
+    ]
     return [f"{prefix}{opt}{suffix}" for opt in options]
 
 
