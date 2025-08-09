@@ -65,7 +65,10 @@ def _extract_pr_url(html: str) -> str | None:
     attribute values, so the regular expression accounts for both variants.
     """
 
-    match = re.search(r"href=['\"](https://github.com/[^'\"]+/pull/\d+)['\"]", html)
+    match = re.search(
+        r"href=['\"](https://github.com/[^'\"?#]+/pull/\d+)(?:[?#][^'\"]*)?['\"]",
+        html,
+    )
     return match.group(1) if match else None
 
 
