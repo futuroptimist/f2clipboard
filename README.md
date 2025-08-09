@@ -17,8 +17,8 @@ Parse the Codex task page (authenticated session or scraped HTML via Playwright)
 
 Locate the linked GitHub PR (“View PR” button).
 
-Normalise the PR link by dropping any query parameters or fragments before
-calling the GitHub API.
+Normalise the PR link by dropping any query parameters, fragments or trailing
+slashes before calling the GitHub API.
 
 Query the GitHub API for the check-suite:
 
