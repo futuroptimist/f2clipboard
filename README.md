@@ -62,6 +62,9 @@ f2clipboard files --dir path/to/project
 - [x] First plugin: Jira ticket summariser. 💯
 - [x] VS Code task provider / GitHub Action marketplace listing. 💯
 
+### M4 (quality of life)
+- [x] Support excluding file patterns in `files` command via `--exclude`. 💯
+
 ## Getting Started
 
 ```bash
@@ -114,6 +117,12 @@ Copy selected files from a local repository:
 
 ```bash
 f2clipboard files --dir path/to/project
+```
+
+Exclude glob patterns by repeating `--exclude`:
+
+```bash
+f2clipboard files --dir path/to/project --exclude 'node_modules/*' --exclude '*.log'
 ```
 
 Check the installed version:
