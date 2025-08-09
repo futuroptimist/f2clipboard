@@ -29,6 +29,7 @@ For every successful check → ignore.
 If a log exceeds 150 kB → invoke an LLM (configurable, OpenAI or Anthropic) to summarise the failure.
 
 Secrets such as API tokens are redacted from logs before summarisation or output.
+Patterns handle GitHub and OpenAI keys, Slack tokens, and generic bearer secrets.
 
 Emit a Markdown snippet ready for pasting back into Codex:
 
@@ -57,9 +58,9 @@ f2clipboard files --dir path/to/project
 ### M2 (hardening)
 - [x] Playwright headless login for private Codex tasks. 💯
 - [x] Unit tests (pytest + `pytest-recording` vcr). 💯
-- [x] Secret scanning & redaction (via custom regex; GitHub `ghp_`/`github_pat_`, OpenAI
+- [x] Secret scanning & redaction (via custom regex; GitHub `ghp_`/`github_pat_`, OpenAI `sk-`,
+  Slack `xoxb-`, and `Bearer` tokens) while preserving whitespace around `=` and `:`. 💯
 - [x] AWS access key redaction. 💯
-- [x] `sk-`, Slack `xoxb-`, and `Bearer` tokens) while preserving whitespace around `=` and `:`. 💯
 
 ### M3 (extensibility)
 - [x] Plugin interface (`entry_points = "f2clipboard.plugins"`). 💯
