@@ -132,6 +132,12 @@ Exclude glob patterns by repeating `--exclude`:
 f2clipboard files --dir path/to/project --exclude 'node_modules/*' --exclude '*.log'
 ```
 
+Use brace expansion in patterns to match multiple extensions:
+
+```bash
+f2clipboard files --pattern '*.{py,js}'
+```
+
 Check the installed version:
 
 ```bash
