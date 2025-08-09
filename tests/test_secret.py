@@ -25,6 +25,13 @@ def test_redact_github_pat():
     assert "github_pat_REDACTED" in redacted
 
 
+def test_redact_openai_token_with_hyphen():
+    token = "sk-live-" + "d" * 40  # pragma: allowlist secret
+    redacted = redact_secrets(token)
+    assert "sk-REDACTED" in redacted
+    assert "d" * 10 not in redacted  # pragma: allowlist secret
+
+
 def test_redact_aws_access_key():
     key = "AKIA" + "A" * 16  # pragma: allowlist secret
     redacted = redact_secrets(f"creds: {key}")

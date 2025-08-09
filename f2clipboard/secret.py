@@ -8,7 +8,8 @@ from typing import Pattern
 SECRET_PATTERNS: list[Pattern[str]] = [
     re.compile(r"ghp_[A-Za-z0-9]{36}"),
     re.compile(r"github_pat_[A-Za-z0-9_]{22,}"),
-    re.compile(r"sk-[A-Za-z0-9]{32,}"),
+    # OpenAI API keys now include dashes in some segments (e.g. ``sk-live-``)
+    re.compile(r"sk-[A-Za-z0-9-]{32,}"),
     re.compile(r"xox[baprs]-[A-Za-z0-9-]{10,}"),
     re.compile(r"(?:ASIA|AKIA)[0-9A-Z]{16}"),
     re.compile(r"(?i)Bearer\s+[A-Za-z0-9._-]{8,}"),
