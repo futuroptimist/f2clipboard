@@ -32,6 +32,13 @@ def test_redact_preserves_whitespace():
     assert "api_key:\t***" in redacted
 
 
+def test_redact_bearer_token():
+    text = "Authorization: Bearer abcdef1234567890"  # pragma: allowlist secret
+    redacted = redact_secrets(text)
+    assert "Bearer ***" in redacted
+    assert "abcdef1234567890" not in redacted  # pragma: allowlist secret
+
+
 def test_process_task_redacts(monkeypatch):
     async def fake_html(url: str, cookie: str | None = None) -> str:
         return '<a href="https://github.com/o/r/pull/1">PR</a>'
