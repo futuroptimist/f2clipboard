@@ -56,6 +56,13 @@ def test_redact_bearer_token():
     assert "abcdef1234567890" not in redacted  # pragma: allowlist secret
 
 
+def test_redact_other_slack_tokens():
+    token = "xoxe-" + "d" * 40  # pragma: allowlist secret
+    redacted = redact_secrets(token)
+    assert token not in redacted  # pragma: allowlist secret
+    assert "xoxe-REDACTED" in redacted
+
+
 def test_process_task_redacts(monkeypatch):
     async def fake_html(url: str, cookie: str | None = None) -> str:
         return '<a href="https://github.com/o/r/pull/1">PR</a>'

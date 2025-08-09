@@ -61,6 +61,7 @@ f2clipboard files --dir path/to/project
   `ghp_`/`gho_`/`ghu_`/`ghs_`/`ghr_`/`github_pat_`, OpenAI `sk-`, Slack `xoxb-`,
   and `Bearer` tokens) while preserving whitespace around `=` and `:`. 💯
 - [x] AWS access key redaction. 💯
+- [x] `sk-`, Slack `xox*`, and `Bearer` tokens) while preserving whitespace around `=` and `:`. 💯
 
 ### M3 (extensibility)
 - [x] Plugin interface (`entry_points = "f2clipboard.plugins"`). 💯
