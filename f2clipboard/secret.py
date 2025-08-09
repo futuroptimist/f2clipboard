@@ -6,8 +6,11 @@ import re
 from typing import Pattern
 
 SECRET_PATTERNS: list[Pattern[str]] = [
-    re.compile(r"ghp_[A-Za-z0-9]{36}"),
+    # GitHub tokens: ghp_ (classic), gho_ (OAuth), ghu_ (user-to-server),
+    # ghs_ (SAML), and ghr_ (refresh tokens)
+    re.compile(r"gh[oprsu]_[A-Za-z0-9]{36}"),
     re.compile(r"github_pat_[A-Za-z0-9_]{22,}"),
+    # OpenAI, Slack, AWS and Bearer tokens
     re.compile(r"sk-[A-Za-z0-9]{32,}"),
     re.compile(r"xox[baprs]-[A-Za-z0-9-]{10,}"),
     re.compile(r"(?:ASIA|AKIA)[0-9A-Z]{16}"),
@@ -35,8 +38,12 @@ def redact_secrets(text: str) -> str:
                 f"{groups.get('post', '')}***"
             )
         token = match.group(0)
-        if token.startswith("ghp_"):
-            return "ghp_REDACTED"
+        if (
+            token.startswith("gh")
+            and token[2] in {"p", "o", "u", "s", "r"}
+            and token[3] == "_"
+        ):
+            return f"{token[:3]}_REDACTED"
         if token.startswith("github_pat_"):
             return "github_pat_REDACTED"
         if token.startswith("sk-"):

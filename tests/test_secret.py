@@ -1,5 +1,7 @@
 import asyncio
 
+import pytest
+
 from f2clipboard.codex_task import _process_task
 from f2clipboard.config import Settings
 from f2clipboard.secret import redact_secrets
@@ -23,6 +25,14 @@ def test_redact_github_pat():
     redacted = redact_secrets(token)
     assert "c" * 10 not in redacted  # pragma: allowlist secret
     assert "github_pat_REDACTED" in redacted
+
+
+@pytest.mark.parametrize("prefix", ["gho_", "ghu_", "ghs_", "ghr_"])
+def test_redact_other_github_tokens(prefix):
+    token = prefix + "d" * 36  # pragma: allowlist secret
+    redacted = redact_secrets(token)
+    assert token not in redacted  # pragma: allowlist secret
+    assert f"{prefix[:3]}_REDACTED" in redacted
 
 
 def test_redact_aws_access_key():
