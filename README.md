@@ -56,6 +56,7 @@ f2clipboard files --dir path/to/project
 - [x] Unit tests (pytest + `pytest-recording` vcr). 💯
 - [x] Secret scanning & redaction (via custom regex; GitHub `ghp_`/`github_pat_`, OpenAI
   `sk-`, and Slack `xoxb-` keys) while preserving whitespace around `=` and `:`. 💯
+- [x] AWS access key redaction. 💯
 
 ### M3 (extensibility)
 - [x] Plugin interface (`entry_points = "f2clipboard.plugins"`). 💯
