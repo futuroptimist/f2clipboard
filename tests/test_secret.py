@@ -25,6 +25,13 @@ def test_redact_github_pat():
     assert "github_pat_REDACTED" in redacted
 
 
+def test_redact_aws_access_key():
+    key = "AKIA" + "A" * 16  # pragma: allowlist secret
+    redacted = redact_secrets(f"creds: {key}")
+    assert key not in redacted  # pragma: allowlist secret
+    assert "AKIA_REDACTED" in redacted
+
+
 def test_redact_preserves_whitespace():
     text = "TOKEN = abcdef123456\napi_key:\tsecret1234"  # pragma: allowlist secret
     redacted = redact_secrets(text)
