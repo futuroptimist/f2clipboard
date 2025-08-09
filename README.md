@@ -104,6 +104,8 @@ changes it mentions:
 f2clipboard chat2prompt https://chatgpt.com/share/abcdefg
 ```
 
+HTML tags are stripped and block-level elements become newlines to preserve chat formatting.
+
 Specify a different platform with ``--platform``:
 
 ```bash

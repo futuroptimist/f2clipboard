@@ -11,9 +11,14 @@ import typer
 
 
 def _extract_text(html_text: str) -> str:
-    """Return plain text from HTML."""
+    """Return plain text from HTML, preserving line breaks."""
+    html_text = re.sub(
+        r"</?(?:br|p|div|li|h[1-6])[^>]*>", "\n", html_text, flags=re.IGNORECASE
+    )
     text = re.sub(r"<[^>]+>", "", html_text)
-    return html.unescape(text).strip()
+    text = html.unescape(text)
+    lines = [line.strip() for line in text.splitlines()]
+    return "\n".join(filter(None, lines))
 
 
 def _fetch_transcript(url: str) -> str:
