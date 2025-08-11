@@ -12,7 +12,7 @@ SECRET_PATTERNS: list[Pattern[str]] = [
     re.compile(r"github_pat_[A-Za-z0-9_]{22,}"),
     # OpenAI, Slack, AWS and Bearer tokens
     re.compile(r"sk-[A-Za-z0-9]{32,}"),
-    re.compile(r"xox[a-zA-Z]-[A-Za-z0-9-]{10,}"),
+    re.compile(r"(?:xox[a-zA-Z]|xapp)-[A-Za-z0-9-]{10,}"),
     re.compile(r"(?:ASIA|AKIA)[0-9A-Z]{16}"),
     re.compile(r"(?i)Bearer\s+[A-Za-z0-9._-]{8,}"),
     re.compile(
@@ -48,7 +48,7 @@ def redact_secrets(text: str) -> str:
             return "github_pat_REDACTED"
         if token.startswith("sk-"):
             return "sk-REDACTED"
-        if token.startswith("xox"):
+        if token.startswith("xox") or token.startswith("xapp"):
             prefix = token.split("-", 1)[0]
             return f"{prefix}-REDACTED"
         if token.startswith("AKIA") or token.startswith("ASIA"):
