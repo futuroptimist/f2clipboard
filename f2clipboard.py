@@ -246,6 +246,11 @@ def build_parser():
         default=[],
         help="Additional glob patterns to ignore (may be repeated)",
     )
+    parser.add_argument(
+        "--no-clipboard",
+        action="store_true",
+        help="Print output instead of copying to the clipboard",
+    )
     return parser
 
 
@@ -264,10 +269,12 @@ def main(argv=None):
         clipboard_content = format_files_for_clipboard(
             selected_files, directory, ignore_patterns
         )
-        clipboard.copy(clipboard_content)
-        print(
-            "🚀 The formatted files have been copied to your clipboard. Ready to paste!"
-        )
+        print(clipboard_content)
+        if not args.no_clipboard:
+            clipboard.copy(clipboard_content)
+            print(
+                "🚀 The formatted files have been copied to your clipboard. Ready to paste!"
+            )
     else:
         print("🚫 No files selected.")
 

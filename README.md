@@ -68,6 +68,7 @@ f2clipboard files --dir path/to/project
 
 ### M4 (quality of life)
 - [x] Support excluding file patterns in `files` command via `--exclude`. 💯
+- [x] Allow skipping clipboard copy in `files` command via `--no-clipboard`. 💯
 
 ## Getting Started
 
@@ -123,6 +124,12 @@ Copy selected files from a local repository:
 
 ```bash
 f2clipboard files --dir path/to/project
+```
+
+To skip copying to the clipboard, pass `--no-clipboard`:
+
+```bash
+f2clipboard files --dir path/to/project --no-clipboard
 ```
 
 Exclude glob patterns by repeating `--exclude`:
