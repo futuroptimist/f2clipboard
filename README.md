@@ -17,14 +17,17 @@ Parse the Codex task page (authenticated session or scraped HTML via Playwright)
 
 Locate the linked GitHub PR (“View PR” button).
 
-Normalise the PR link by dropping any query parameters, fragments or trailing
-slashes before calling the GitHub API.
+Normalise the PR link—tolerating attribute whitespace and casing—by dropping
+any query parameters, fragments or trailing slashes before calling the GitHub
+API.
 
 Query the GitHub API for the check-suite:
 
-For every failed check → download full raw logs.
+For checks concluding with `failure`, `timed_out`, `cancelled` or `action_required`
+→ download full raw logs.
 
-For every successful check → ignore.
+For checks concluding with `success`, `neutral`, `skipped` or any other
+non-failure state → ignore.
 
 If a log exceeds 150 kB → invoke an LLM (configurable, OpenAI or Anthropic) to summarise the failure.
 
@@ -32,7 +35,7 @@ Secrets such as API tokens are redacted from logs before summarisation or output
 
 Emit a Markdown snippet ready for pasting back into Codex:
 
-Each failed check becomes a fenced code-block labelled with job name & link.
+Each failing check becomes a fenced code-block labelled with job name & link.
 
 Oversized logs are replaced by the summary plus a collapsible <details> section with the first 100 lines for context.
 
@@ -57,7 +60,7 @@ f2clipboard files --dir path/to/project
 ### M2 (hardening)
 - [x] Playwright headless login for private Codex tasks. 💯
 - [x] Unit tests (pytest + `pytest-recording` vcr). 💯
-- [x] Secret scanning & redaction (via custom regex; GitHub `ghp_`/`gho_`/`ghu_`/`ghs_`/`ghr_`/`github_pat_`, OpenAI `sk-`, Slack `xoxb-` and `xapp-`, and `Bearer` tokens) while preserving whitespace around `=` and `:`. 💯
+- [x] Secret scanning & redaction (via custom regex; GitHub `ghp_`/`gho_`/`ghu_`/`ghs_`/`ghr_`/`github_pat_`, OpenAI `sk-`, Slack `xoxb-` and `xapp-`, `Bearer` tokens, and base64-like secrets containing `+`, `/` or `=`) while preserving whitespace around `=` and `:`. 💯
 - [x] AWS access key redaction. 💯
 
 ### M3 (extensibility)
@@ -69,6 +72,7 @@ f2clipboard files --dir path/to/project
 ### M4 (quality of life)
 - [x] Support excluding file patterns in `files` command via `--exclude`. 💯
 - [x] Allow skipping clipboard copy in `files` command via `--no-clipboard`. 💯
+- [x] Dry-run option for `files` command to print Markdown instead of copying. 💯
 
 ## Getting Started
 
@@ -120,6 +124,12 @@ Specify a different platform with ``--platform``:
 f2clipboard chat2prompt https://chatgpt.com/share/abcdefg --platform anthropic
 ```
 
+Adjust the HTTP timeout (default 10 seconds):
+
+```bash
+f2clipboard chat2prompt https://chatgpt.com/share/abcdefg --timeout 5
+```
+
 Copy selected files from a local repository:
 
 ```bash
@@ -136,6 +146,12 @@ Exclude glob patterns by repeating `--exclude`:
 
 ```bash
 f2clipboard files --dir path/to/project --exclude 'node_modules/*' --exclude '*.log'
+```
+
+Preview output without copying to the clipboard:
+
+```bash
+f2clipboard files --dir path/to/project --dry-run
 ```
 
 Use brace expansion in patterns to match multiple extensions:

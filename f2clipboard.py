@@ -251,6 +251,11 @@ def build_parser():
         action="store_true",
         help="Print output instead of copying to the clipboard",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print formatted Markdown instead of copying to clipboard",
+    )
     return parser
 
 
@@ -271,6 +276,9 @@ def main(argv=None):
         )
         print(clipboard_content)
         if not args.no_clipboard:
+        if args.dry_run:
+            print(clipboard_content)
+        else:
             clipboard.copy(clipboard_content)
             print(
                 "🚀 The formatted files have been copied to your clipboard. Ready to paste!"

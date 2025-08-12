@@ -22,6 +22,9 @@ def files_command(
         True,
         "--clipboard/--no-clipboard",
         help="Copy formatted output to the clipboard",
+      
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Print Markdown instead of copying to clipboard"
     ),
 ) -> None:
     """Invoke the legacy script to copy selected files to the clipboard."""
@@ -42,4 +45,6 @@ def files_command(
         argv.extend(["--exclude", pat])
     if not copy_to_clipboard:
         argv.append("--no-clipboard")
+    if dry_run:
+        argv.append("--dry-run")
     module.main(argv)

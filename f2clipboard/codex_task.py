@@ -22,6 +22,10 @@ except ImportError:  # pragma: no cover - Playwright may be missing
 
 GITHUB_API = "https://api.github.com"
 
+# GitHub check-run conclusions considered failing. Other states such as
+# "success", "neutral" or "skipped" are ignored when gathering logs.
+FAIL_CONCLUSIONS = {"failure", "timed_out", "cancelled", "action_required"}
+
 
 async def _fetch_task_html(url: str, cookie: str | None = None) -> str:
     """Fetch raw HTML for a Codex task page.
@@ -62,13 +66,15 @@ def _extract_pr_url(html: str) -> str | None:
 
     The Codex task page includes a "View PR" link pointing to the associated
     GitHub pull request. Codex's markup may use single or double quotes around
-    attribute values and may include a trailing slash, so the regular
-    expression accounts for these variants.
+    attribute values, whitespace around the equals sign and different attribute
+    casing. The regular expression accounts for these variants, ignoring case
+    and normalising the extracted URL.
     """
 
     match = re.search(
-        r"href=['\"](https://github.com/[^'\"?#]+/pull/\d+)(?:/)?(?:[?#][^'\"]*)?['\"]",
+        r"href\s*=\s*['\"](https://github.com/[^'\"?#]+/pull/\d+)(?:/)?(?:[?#][^'\"]*)?['\"]",
         html,
+        flags=re.IGNORECASE,
     )
     return match.group(1) if match else None
 
@@ -148,7 +154,7 @@ async def _process_task(url: str, settings: Settings) -> str:
         base_url=GITHUB_API, headers=_github_headers(settings.github_token)
     ) as client:
         for run in check_runs:
-            if run.get("conclusion") == "success":
+            if run.get("conclusion") not in FAIL_CONCLUSIONS:
                 continue
             log_text = await _download_log(client, owner, repo, run["id"])
             log_text = redact_secrets(log_text)
