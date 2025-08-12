@@ -21,9 +21,9 @@ def _extract_text(html_text: str) -> str:
     return "\n".join(filter(None, lines))
 
 
-def _fetch_transcript(url: str) -> str:
+def _fetch_transcript(url: str, timeout: float = 10.0) -> str:
     """Download transcript text from a shared chat URL."""
-    response = httpx.get(url, follow_redirects=True)
+    response = httpx.get(url, follow_redirects=True, timeout=timeout)
     response.raise_for_status()
     return _extract_text(response.text)
 
@@ -43,9 +43,12 @@ def chat2prompt_command(
     copy_to_clipboard: bool = typer.Option(
         True, "--clipboard/--no-clipboard", help="Copy prompt to clipboard."
     ),
+    timeout: float = typer.Option(
+        10.0, "--timeout", help="HTTP request timeout in seconds"
+    ),
 ) -> None:
     """Create a coding prompt from a chat transcript and copy it to the clipboard."""
-    transcript = _fetch_transcript(url)
+    transcript = _fetch_transcript(url, timeout=timeout)
     prompt = _build_prompt(transcript, platform)
     if copy_to_clipboard:
         clipboard.copy(prompt)
