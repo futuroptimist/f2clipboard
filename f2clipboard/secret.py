@@ -18,7 +18,7 @@ SECRET_PATTERNS: list[Pattern[str]] = [
     re.compile(
         r"(?i)(?P<key>[\w-]*(?:api|token|secret|password)[\w-]*)"
         r"(?P<pre>\s*)(?P<sep>[:=])(?P<post>\s*)"
-        r"(?P<value>[A-Za-z0-9-_.]{8,})"
+        r"(?P<value>[A-Za-z0-9-_.+/=]{8,})"
     ),
 ]
 
