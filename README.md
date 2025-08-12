@@ -23,9 +23,11 @@ API.
 
 Query the GitHub API for the check-suite:
 
-For every failed check → download full raw logs.
+For checks concluding with `failure`, `timed_out`, `cancelled` or `action_required`
+→ download full raw logs.
 
-For every successful check → ignore.
+For checks concluding with `success`, `neutral`, `skipped` or any other
+non-failure state → ignore.
 
 If a log exceeds 150 kB → invoke an LLM (configurable, OpenAI or Anthropic) to summarise the failure.
 
@@ -33,7 +35,7 @@ Secrets such as API tokens are redacted from logs before summarisation or output
 
 Emit a Markdown snippet ready for pasting back into Codex:
 
-Each failed check becomes a fenced code-block labelled with job name & link.
+Each failing check becomes a fenced code-block labelled with job name & link.
 
 Oversized logs are replaced by the summary plus a collapsible <details> section with the first 100 lines for context.
 
