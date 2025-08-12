@@ -1,7 +1,19 @@
 # f2clipboard v2 – "flows to clipboard"
 
-[![CI](https://github.com/futuroptimist/f2clipboard/actions/workflows/lint-test.yml/badge.svg)](https://github.com/futuroptimist/f2clipboard/actions/workflows/lint-test.yml)
+[![Lint & Format][lint-badge]][lint-workflow]
+[![Tests][tests-badge]][tests-workflow]
+[![Coverage][coverage-badge]][codecov]
+[![Docs][docs-badge]][docs-workflow]
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+[lint-badge]: https://img.shields.io/github/actions/workflow/status/futuroptimist/f2clipboard/01-lint-format.yml?label=lint%20%26%20format
+[lint-workflow]: https://github.com/futuroptimist/f2clipboard/actions/workflows/01-lint-format.yml
+[tests-badge]: https://img.shields.io/github/actions/workflow/status/futuroptimist/f2clipboard/02-tests.yml?label=tests
+[tests-workflow]: https://github.com/futuroptimist/f2clipboard/actions/workflows/02-tests.yml
+[coverage-badge]: https://codecov.io/gh/futuroptimist/f2clipboard/branch/main/graph/badge.svg
+[codecov]: https://codecov.io/gh/futuroptimist/f2clipboard
+[docs-badge]: https://img.shields.io/github/actions/workflow/status/futuroptimist/f2clipboard/03-docs.yml?label=docs
+[docs-workflow]: https://github.com/futuroptimist/f2clipboard/actions/workflows/03-docs.yml
 
 ## Problem
 Repetitive web-based engineering chores (triaging CI failures, gathering logs, summarising errors) steal focus and time. Existing tooling (e.g. OpenAI Operator) is deprecated or proprietary.
