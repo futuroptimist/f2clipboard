@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import gzip
 import re
+from pathlib import Path
 from typing import Annotated, Any
 
 import clipboard
@@ -178,11 +179,16 @@ def codex_task_command(
             help="Summarise logs larger than this many bytes.",
         ),
     ] = None,
+    output: Annotated[
+        Path | None,
+        typer.Option("--output", help="Write Markdown to a file."),
+    ] = None,
 ) -> None:
     """Parse a Codex task page and print any failing GitHub checks.
 
     The generated Markdown is copied to the clipboard unless ``--no-clipboard`` is passed.
-    Use ``--log-size-threshold`` to override the summarisation threshold.
+    Use ``--log-size-threshold`` to override the summarisation threshold. Pass
+    ``--output`` to save the result to a file.
     """
     typer.echo(f"Parsing Codex task page: {url}…")
     if log_size_threshold is not None:
@@ -190,6 +196,8 @@ def codex_task_command(
     else:
         settings = Settings()  # load environment (e.g. GITHUB_TOKEN)
     result = asyncio.run(_process_task(url, settings))
+    if output is not None:
+        output.write_text(result)
     if copy_to_clipboard:
         clipboard.copy(result)
     typer.echo(result)

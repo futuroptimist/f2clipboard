@@ -68,6 +68,7 @@ f2clipboard files --dir path/to/project
 
 ### M4 (quality of life)
 - [x] Support excluding file patterns in `files` command via `--exclude`. 💯
+- [x] Allow saving `codex-task` output via `--output`. 💯
 
 ## Getting Started
 
@@ -93,6 +94,12 @@ To skip copying to the clipboard, pass ``--no-clipboard``:
 
 ```bash
 f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123 --no-clipboard
+```
+
+Save the Markdown to a file with ``--output``:
+
+```bash
+f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123 --output task.md
 ```
 
 Adjust the log size threshold for summarisation with ``--log-size-threshold``:

@@ -249,6 +249,17 @@ def test_codex_task_command_initialises_settings_once(monkeypatch):
     assert calls == [5]
 
 
+def test_codex_task_command_writes_output(monkeypatch, tmp_path, capsys):
+    async def fake_process(url: str, settings: Settings) -> str:
+        return "MD"
+
+    monkeypatch.setattr("f2clipboard.codex_task._process_task", fake_process)
+    out_file = tmp_path / "out.md"
+    codex_task_command("http://task", copy_to_clipboard=False, output=out_file)
+    assert out_file.read_text() == "MD"
+    assert "MD" in capsys.readouterr().out
+
+
 @pytest.mark.vcr()
 def test_fetch_task_html_records_example():
     html = asyncio.run(_fetch_task_html("https://example.com"))
