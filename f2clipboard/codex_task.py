@@ -22,6 +22,10 @@ except ImportError:  # pragma: no cover - Playwright may be missing
 
 GITHUB_API = "https://api.github.com"
 
+# GitHub check-run conclusions considered failing. Other states such as
+# "success", "neutral" or "skipped" are ignored when gathering logs.
+FAIL_CONCLUSIONS = {"failure", "timed_out", "cancelled", "action_required"}
+
 
 async def _fetch_task_html(url: str, cookie: str | None = None) -> str:
     """Fetch raw HTML for a Codex task page.
@@ -148,7 +152,7 @@ async def _process_task(url: str, settings: Settings) -> str:
         base_url=GITHUB_API, headers=_github_headers(settings.github_token)
     ) as client:
         for run in check_runs:
-            if run.get("conclusion") == "success":
+            if run.get("conclusion") not in FAIL_CONCLUSIONS:
                 continue
             log_text = await _download_log(client, owner, repo, run["id"])
             log_text = redact_secrets(log_text)
