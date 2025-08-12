@@ -18,6 +18,9 @@ def files_command(
         "--exclude",
         help="Additional glob patterns to ignore (can be used multiple times)",
     ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Print Markdown instead of copying to clipboard"
+    ),
 ) -> None:
     """Invoke the legacy script to copy selected files to the clipboard."""
     script_path = Path(__file__).resolve().parent.parent / "f2clipboard.py"
@@ -35,4 +38,6 @@ def files_command(
     argv = ["--dir", directory, "--pattern", pattern]
     for pat in exclude:
         argv.extend(["--exclude", pat])
+    if dry_run:
+        argv.append("--dry-run")
     module.main(argv)

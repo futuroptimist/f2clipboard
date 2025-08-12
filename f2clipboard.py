@@ -246,6 +246,11 @@ def build_parser():
         default=[],
         help="Additional glob patterns to ignore (may be repeated)",
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print formatted Markdown instead of copying to clipboard",
+    )
     return parser
 
 
@@ -264,10 +269,13 @@ def main(argv=None):
         clipboard_content = format_files_for_clipboard(
             selected_files, directory, ignore_patterns
         )
-        clipboard.copy(clipboard_content)
-        print(
-            "🚀 The formatted files have been copied to your clipboard. Ready to paste!"
-        )
+        if args.dry_run:
+            print(clipboard_content)
+        else:
+            clipboard.copy(clipboard_content)
+            print(
+                "🚀 The formatted files have been copied to your clipboard. Ready to paste!"
+            )
     else:
         print("🚫 No files selected.")
 
