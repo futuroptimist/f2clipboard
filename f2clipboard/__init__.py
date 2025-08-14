@@ -1,3 +1,4 @@
+import json
 import logging
 from importlib.metadata import PackageNotFoundError, entry_points, version
 
@@ -22,13 +23,23 @@ _loaded_plugins: list[str] = []
 
 
 @app.command("plugins")
-def plugins_command() -> None:
+def plugins_command(
+    json_output: bool = typer.Option(
+        False, "--json", help="Output plugin names as JSON."
+    )
+) -> None:
     """List registered plugin names."""
     if not _loaded_plugins:
-        typer.echo("No plugins installed")
+        if json_output:
+            typer.echo("[]")
+        else:
+            typer.echo("No plugins installed")
         return
-    for name in _loaded_plugins:
-        typer.echo(name)
+    if json_output:
+        typer.echo(json.dumps(_loaded_plugins))
+    else:
+        for name in _loaded_plugins:
+            typer.echo(name)
 
 
 def _version_callback(value: bool) -> None:
