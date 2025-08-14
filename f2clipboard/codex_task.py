@@ -111,7 +111,10 @@ def _github_headers(token: str | None) -> dict[str, str]:
 
     The Authorization header is included when a token is supplied.
     """
-    headers = {"Accept": "application/vnd.github+json"}
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "f2clipboard",
+    }
     if token:
         headers["Authorization"] = f"Bearer {token}"
     return headers
