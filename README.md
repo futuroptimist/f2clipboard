@@ -84,6 +84,7 @@ f2clipboard files --dir path/to/project
 ### M4 (quality of life)
 - [x] Support excluding file patterns in `files` command via `--exclude`. 💯
 - [x] Dry-run option for `files` command to print Markdown instead of copying. 💯
+- [x] JSON output option for `plugins` command. 💯
 
 ## Getting Started
 
@@ -197,6 +198,12 @@ List installed plugins:
 
 ```bash
 f2clipboard plugins
+```
+
+Output as JSON:
+
+```bash
+f2clipboard plugins --json
 ```
 
 The first bundled plugin summarises Jira issues:
