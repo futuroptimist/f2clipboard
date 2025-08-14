@@ -18,6 +18,9 @@ def files_command(
         "--exclude",
         help="Additional glob patterns to ignore (can be used multiple times)",
     ),
+    all_files: bool = typer.Option(
+        False, "--all", help="Select all matched files without an interactive prompt"
+    ),
     dry_run: bool = typer.Option(
         False, "--dry-run", help="Print Markdown instead of copying to clipboard"
     ),
@@ -38,6 +41,8 @@ def files_command(
     argv = ["--dir", directory, "--pattern", pattern]
     for pat in exclude:
         argv.extend(["--exclude", pat])
+    if all_files:
+        argv.append("--all")
     if dry_run:
         argv.append("--dry-run")
     module.main(argv)

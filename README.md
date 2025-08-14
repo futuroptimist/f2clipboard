@@ -84,6 +84,7 @@ f2clipboard files --dir path/to/project
 ### M4 (quality of life)
 - [x] Support excluding file patterns in `files` command via `--exclude`. 💯
 - [x] Dry-run option for `files` command to print Markdown instead of copying. 💯
+- [x] Non-interactive flag to select all files in `files` command via `--all`. 💯
 
 ## Getting Started
 
@@ -145,6 +146,12 @@ Copy selected files from a local repository:
 
 ```bash
 f2clipboard files --dir path/to/project
+```
+
+Select all matches without prompting:
+
+```bash
+f2clipboard files --dir path/to/project --all
 ```
 
 Exclude glob patterns by repeating `--exclude`:
