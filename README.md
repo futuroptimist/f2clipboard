@@ -93,6 +93,7 @@ cd f2clipboard
 pip install -e ".[dev]"
 cp .env.example .env  # fill in your tokens
 # Set GITHUB_TOKEN to authenticate GitHub API requests
+# Requests include a 'User-Agent: f2clipboard' header per GitHub guidelines
 # Set OPENAI_API_KEY or ANTHROPIC_API_KEY for log summarisation
 # Set CODEX_COOKIE to access private Codex tasks
 ```

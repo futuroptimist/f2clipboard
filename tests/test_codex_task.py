@@ -9,6 +9,7 @@ from f2clipboard.codex_task import (
     _extract_pr_url,
     _fetch_check_runs,
     _fetch_task_html,
+    _github_headers,
     _parse_pr_url,
     _process_task,
     codex_task_command,
@@ -106,6 +107,15 @@ def test_fetch_check_runs_includes_token(monkeypatch):
     monkeypatch.setattr("f2clipboard.codex_task.httpx.AsyncClient", DummyClient)
     asyncio.run(_fetch_check_runs("https://github.com/o/r/pull/1", "tok"))
     assert captured["headers"]["Authorization"] == "Bearer tok"
+    assert captured["headers"]["User-Agent"] == "f2clipboard"
+
+
+def test_github_headers_without_token() -> None:
+    headers = _github_headers(None)
+    assert headers == {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "f2clipboard",
+    }
 
 
 def test_decode_log_handles_gzip():
