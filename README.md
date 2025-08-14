@@ -84,6 +84,7 @@ f2clipboard files --dir path/to/project
 ### M4 (quality of life)
 - [x] Support excluding file patterns in `files` command via `--exclude`. 💯
 - [x] Dry-run option for `files` command to print Markdown instead of copying. 💯
+- [x] Non-interactive mode for `files` command to select all matches via `--all`. 💯
 
 ## Getting Started
 
@@ -158,6 +159,14 @@ Preview output without copying to the clipboard:
 ```bash
 f2clipboard files --dir path/to/project --dry-run
 ```
+
+Select all matched files without prompts:
+
+```bash
+f2clipboard files --dir path/to/project --pattern '*.py' --all
+```
+
+Combine with `--dry-run` to preview the output before copying.
 
 Use brace expansion in patterns to match multiple extensions:
 
