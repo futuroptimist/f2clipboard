@@ -127,6 +127,12 @@ changes it mentions:
 f2clipboard chat2prompt https://chatgpt.com/share/abcdefg
 ```
 
+The prompt is copied to your clipboard by default. To skip copying, use ``--no-clipboard``:
+
+```bash
+f2clipboard chat2prompt https://chatgpt.com/share/abcdefg --no-clipboard
+```
+
 HTML tags are stripped and block-level elements become newlines to preserve chat formatting.
 
 Specify a different platform with ``--platform``:
