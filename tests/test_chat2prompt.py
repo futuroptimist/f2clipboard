@@ -22,6 +22,11 @@ def test_extract_text_preserves_line_breaks():
     assert _extract_text(html) == "Hello\nWorld"
 
 
+def test_extract_text_converts_list_items_to_bullets():
+    html = "<ul><li>One</li><li>Two</li></ul>"
+    assert _extract_text(html) == "- One\n- Two"
+
+
 def test_chat2prompt_command_copies_prompt(monkeypatch, capsys):
     def fake_fetch(url: str, timeout: float) -> str:
         assert url == "http://chat"

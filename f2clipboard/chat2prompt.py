@@ -11,9 +11,11 @@ import typer
 
 
 def _extract_text(html_text: str) -> str:
-    """Return plain text from HTML, preserving line breaks."""
+    """Return plain text from HTML, preserving line breaks and bullet points."""
+    html_text = re.sub(r"<li[^>]*>", "\n- ", html_text, flags=re.IGNORECASE)
+    html_text = re.sub(r"</li[^>]*>", "\n", html_text, flags=re.IGNORECASE)
     html_text = re.sub(
-        r"</?(?:br|p|div|li|h[1-6])[^>]*>", "\n", html_text, flags=re.IGNORECASE
+        r"</?(?:br|p|div|h[1-6])[^>]*>", "\n", html_text, flags=re.IGNORECASE
     )
     text = re.sub(r"<[^>]+>", "", html_text)
     text = html.unescape(text)
