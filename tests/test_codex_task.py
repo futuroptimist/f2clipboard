@@ -117,6 +117,10 @@ def test_decode_log_plain():
     assert _decode_log(b"plain") == "plain"
 
 
+def test_decode_log_invalid_utf8():
+    assert _decode_log(b"\xff\xfe") == "��"
+
+
 def test_download_log_handles_gzip():
     class DummyResponse:
         def __init__(self, data: bytes):

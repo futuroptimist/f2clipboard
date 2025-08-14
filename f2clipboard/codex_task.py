@@ -102,8 +102,8 @@ def _decode_log(data: bytes) -> str:
     """
 
     if data[:2] == b"\x1f\x8b":  # gzip magic number
-        return gzip.decompress(data).decode()
-    return data.decode()
+        return gzip.decompress(data).decode("utf-8", errors="replace")
+    return data.decode("utf-8", errors="replace")
 
 
 def _github_headers(token: str | None) -> dict[str, str]:
