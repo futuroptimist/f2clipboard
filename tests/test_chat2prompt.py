@@ -1,4 +1,6 @@
 import clipboard
+import pytest
+import typer
 
 from f2clipboard.chat2prompt import (
     _extract_text,
@@ -73,3 +75,8 @@ def test_chat2prompt_command_respects_timeout(monkeypatch):
 
     monkeypatch.setattr("f2clipboard.chat2prompt._fetch_transcript", fake_fetch)
     chat2prompt_command("http://chat", timeout=2, copy_to_clipboard=False)
+
+
+def test_chat2prompt_timeout_must_be_positive():
+    with pytest.raises(typer.BadParameter):
+        chat2prompt_command("http://chat", timeout=0, copy_to_clipboard=False)

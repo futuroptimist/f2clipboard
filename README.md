@@ -143,7 +143,7 @@ Specify a different platform with ``--platform``:
 f2clipboard chat2prompt https://chatgpt.com/share/abcdefg --platform anthropic
 ```
 
-Adjust the HTTP timeout (default 10 seconds):
+Adjust the HTTP timeout (must be > 0, default 10 seconds):
 
 ```bash
 f2clipboard chat2prompt https://chatgpt.com/share/abcdefg --timeout 5

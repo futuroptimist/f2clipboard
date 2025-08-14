@@ -50,6 +50,8 @@ def chat2prompt_command(
     ),
 ) -> None:
     """Create a coding prompt from a chat transcript and copy it to the clipboard."""
+    if timeout <= 0:
+        raise typer.BadParameter("timeout must be greater than 0")
     transcript = _fetch_transcript(url, timeout=timeout)
     prompt = _build_prompt(transcript, platform)
     if copy_to_clipboard:
