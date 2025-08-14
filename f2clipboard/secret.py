@@ -18,7 +18,7 @@ SECRET_PATTERNS: list[Pattern[str]] = [
     re.compile(
         r"(?i)(?P<key>[\w-]*(?:api|token|secret|password)[\w-]*)"
         r"(?P<pre>\s*)(?P<sep>[:=])(?P<post>\s*)"
-        r"(?P<value>[A-Za-z0-9-_.+/=]{8,})"
+        r"(?P<quote>['\"]?)(?P<value>[A-Za-z0-9-_.+/=]{8,})(?P=quote)"
     ),
 ]
 
@@ -33,9 +33,10 @@ def redact_secrets(text: str) -> str:
     def _repl(match: re.Match[str]) -> str:
         groups = match.groupdict()
         if "key" in groups:
+            quote = groups.get("quote", "")
             return (
                 f"{groups['key']}{groups.get('pre', '')}{groups['sep']}"
-                f"{groups.get('post', '')}***"
+                f"{groups.get('post', '')}{quote}***{quote}"
             )
         token = match.group(0)
         if (
