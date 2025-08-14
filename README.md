@@ -84,6 +84,7 @@ f2clipboard files --dir path/to/project
 ### M4 (quality of life)
 - [x] Support excluding file patterns in `files` command via `--exclude`. 💯
 - [x] Dry-run option for `files` command to print Markdown instead of copying. 💯
+- [x] Output Markdown to a file in `files` command via `--output`. 💯
 
 ## Getting Started
 
@@ -157,6 +158,12 @@ Preview output without copying to the clipboard:
 
 ```bash
 f2clipboard files --dir path/to/project --dry-run
+```
+
+Write output to a file:
+
+```bash
+f2clipboard files --dir path/to/project --output snippet.md
 ```
 
 Use brace expansion in patterns to match multiple extensions:

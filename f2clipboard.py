@@ -251,6 +251,10 @@ def build_parser():
         action="store_true",
         help="Print formatted Markdown instead of copying to clipboard",
     )
+    parser.add_argument(
+        "--output",
+        help="Write formatted Markdown to this file",
+    )
     return parser
 
 
@@ -269,6 +273,9 @@ def main(argv=None):
         clipboard_content = format_files_for_clipboard(
             selected_files, directory, ignore_patterns
         )
+        if args.output:
+            with open(args.output, "w") as fh:
+                fh.write(clipboard_content)
         if args.dry_run:
             print(clipboard_content)
         else:

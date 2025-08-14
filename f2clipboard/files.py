@@ -21,6 +21,11 @@ def files_command(
     dry_run: bool = typer.Option(
         False, "--dry-run", help="Print Markdown instead of copying to clipboard"
     ),
+    output: str | None = typer.Option(
+        None,
+        "--output",
+        help="Write formatted Markdown to this file",
+    ),
 ) -> None:
     """Invoke the legacy script to copy selected files to the clipboard."""
     script_path = Path(__file__).resolve().parent.parent / "f2clipboard.py"
@@ -40,4 +45,6 @@ def files_command(
         argv.extend(["--exclude", pat])
     if dry_run:
         argv.append("--dry-run")
+    if output:
+        argv.extend(["--output", output])
     module.main(argv)
