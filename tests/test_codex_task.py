@@ -108,6 +108,67 @@ def test_fetch_check_runs_includes_token(monkeypatch):
     assert captured["headers"]["Authorization"] == "Bearer tok"
 
 
+def test_fetch_task_html_uses_timeout(monkeypatch):
+    captured: dict[str, float | None] = {}
+
+    class DummyResponse:
+        text = "ok"
+
+        def raise_for_status(self) -> None:  # pragma: no cover - no error path
+            pass
+
+    class DummyClient:
+        def __init__(self, *args, timeout=None, **kwargs):
+            captured["timeout"] = timeout
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb) -> None:
+            pass
+
+        async def get(self, url: str):
+            return DummyResponse()
+
+    monkeypatch.setattr("f2clipboard.codex_task.httpx.AsyncClient", DummyClient)
+    html = asyncio.run(_fetch_task_html("https://example.com", timeout=5))
+    assert captured["timeout"] == 5
+    assert html == "ok"
+
+
+def test_fetch_check_runs_uses_timeout(monkeypatch):
+    captured: dict[str, float | None] = {}
+
+    class DummyResponse:
+        def __init__(self, data):
+            self._data = data
+
+        def raise_for_status(self) -> None:  # pragma: no cover - no error path
+            pass
+
+        def json(self):
+            return self._data
+
+    class DummyClient:
+        def __init__(self, *args, timeout=None, **kwargs):
+            captured["timeout"] = timeout
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb) -> None:
+            pass
+
+        async def get(self, path: str):
+            if path == "/repos/o/r/pulls/1":
+                return DummyResponse({"head": {"sha": "abc"}})
+            return DummyResponse({"check_runs": []})
+
+    monkeypatch.setattr("f2clipboard.codex_task.httpx.AsyncClient", DummyClient)
+    asyncio.run(_fetch_check_runs("https://github.com/o/r/pull/1", None, timeout=7))
+    assert captured["timeout"] == 7
+
+
 def test_decode_log_handles_gzip():
     data = gzip.compress(b"hello")
     assert _decode_log(data) == "hello"
@@ -135,10 +196,12 @@ def test_download_log_handles_gzip():
 
 
 def test_process_task_summarises_large_log(monkeypatch):
-    async def fake_html(url: str, cookie: str | None = None) -> str:
+    async def fake_html(
+        url: str, cookie: str | None = None, timeout: float = 10.0
+    ) -> str:
         return '<a href="https://github.com/o/r/pull/1">PR</a>'
 
-    async def fake_runs(pr_url: str, token: str | None):
+    async def fake_runs(pr_url: str, token: str | None, timeout: float = 10.0):
         return [{"id": 1, "name": "Job", "conclusion": "failure"}]
 
     async def fake_log(client, owner, repo, run_id):
@@ -160,10 +223,12 @@ def test_process_task_summarises_large_log(monkeypatch):
 
 
 def test_process_task_small_log_skips_summarise(monkeypatch):
-    async def fake_html(url: str, cookie: str | None = None) -> str:
+    async def fake_html(
+        url: str, cookie: str | None = None, timeout: float = 10.0
+    ) -> str:
         return '<a href="https://github.com/o/r/pull/1">PR</a>'
 
-    async def fake_runs(pr_url: str, token: str | None):
+    async def fake_runs(pr_url: str, token: str | None, timeout: float = 10.0):
         return [{"id": 1, "name": "Job", "conclusion": "failure"}]
 
     async def fake_log(client, owner, repo, run_id):
@@ -188,10 +253,12 @@ def test_process_task_small_log_skips_summarise(monkeypatch):
 
 
 def test_process_task_ignores_non_failed_runs(monkeypatch):
-    async def fake_html(url: str, cookie: str | None = None) -> str:
+    async def fake_html(
+        url: str, cookie: str | None = None, timeout: float = 10.0
+    ) -> str:
         return '<a href="https://github.com/o/r/pull/1">PR</a>'
 
-    async def fake_runs(pr_url: str, token: str | None):
+    async def fake_runs(pr_url: str, token: str | None, timeout: float = 10.0):
         return [
             {"id": 1, "name": "Neutral", "conclusion": "neutral"},
             {"id": 2, "name": "Pending", "conclusion": None},
@@ -223,7 +290,7 @@ def test_codex_task_command_copies_to_clipboard(monkeypatch, capsys):
         copied["text"] = text
 
     monkeypatch.setattr("f2clipboard.codex_task.clipboard.copy", fake_copy)
-    codex_task_command("http://task")
+    codex_task_command("http://task", timeout=10.0)
     out = capsys.readouterr().out
     assert "MD" in out
     assert copied["text"] == "MD"
@@ -240,7 +307,7 @@ def test_codex_task_command_skips_clipboard(monkeypatch, capsys):
         copied["text"] = text
 
     monkeypatch.setattr("f2clipboard.codex_task.clipboard.copy", fake_copy)
-    codex_task_command("http://task", copy_to_clipboard=False)
+    codex_task_command("http://task", copy_to_clipboard=False, timeout=10.0)
     out = capsys.readouterr().out
     assert "MD" in out
     assert not copied
@@ -251,18 +318,35 @@ def test_codex_task_command_overrides_threshold(monkeypatch, capsys):
         return str(settings.log_size_threshold)
 
     monkeypatch.setattr("f2clipboard.codex_task._process_task", fake_process)
-    codex_task_command("http://task", copy_to_clipboard=False, log_size_threshold=1234)
+    codex_task_command(
+        "http://task", copy_to_clipboard=False, log_size_threshold=1234, timeout=10.0
+    )
     out = capsys.readouterr().out
     assert "1234" in out
+
+
+def test_codex_task_command_overrides_timeout(monkeypatch, capsys):
+    async def fake_process(url: str, settings: Settings) -> str:
+        return str(settings.http_timeout)
+
+    monkeypatch.setattr("f2clipboard.codex_task._process_task", fake_process)
+    codex_task_command("http://task", copy_to_clipboard=False, timeout=7.5)
+    out = capsys.readouterr().out
+    assert "7.5" in out
 
 
 def test_codex_task_command_initialises_settings_once(monkeypatch):
     calls: list[int | None] = []
 
     class DummySettings:
-        def __init__(self, LOG_SIZE_THRESHOLD: int = 150_000):
+        def __init__(
+            self,
+            LOG_SIZE_THRESHOLD: int = 150_000,
+            HTTP_TIMEOUT: float = 10.0,
+        ):
             calls.append(LOG_SIZE_THRESHOLD)
             self.log_size_threshold = LOG_SIZE_THRESHOLD
+            self.http_timeout = HTTP_TIMEOUT
 
     async def fake_process(url: str, settings: DummySettings) -> str:
         return ""
@@ -270,7 +354,9 @@ def test_codex_task_command_initialises_settings_once(monkeypatch):
     monkeypatch.setattr("f2clipboard.codex_task.Settings", DummySettings)
     monkeypatch.setattr("f2clipboard.codex_task._process_task", fake_process)
 
-    codex_task_command("http://task", copy_to_clipboard=False, log_size_threshold=5)
+    codex_task_command(
+        "http://task", copy_to_clipboard=False, log_size_threshold=5, timeout=10.0
+    )
     assert calls == [5]
 
 
@@ -282,7 +368,9 @@ def test_fetch_task_html_records_example():
 
 def test_fetch_task_html_uses_playwright(monkeypatch):
     class DummyPage:
-        async def goto(self, url: str) -> None:  # pragma: no cover - trivial
+        async def goto(
+            self, url: str, timeout: float | None = None
+        ) -> None:  # pragma: no cover - trivial
             self.url = url
 
         async def content(self) -> str:

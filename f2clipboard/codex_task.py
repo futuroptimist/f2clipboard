@@ -27,7 +27,9 @@ GITHUB_API = "https://api.github.com"
 FAIL_CONCLUSIONS = {"failure", "timed_out", "cancelled", "action_required"}
 
 
-async def _fetch_task_html(url: str, cookie: str | None = None) -> str:
+async def _fetch_task_html(
+    url: str, cookie: str | None = None, timeout: float = 10.0
+) -> str:
     """Fetch raw HTML for a Codex task page.
 
     If ``cookie`` is provided, Playwright is used to inject the session cookie before
@@ -51,11 +53,11 @@ async def _fetch_task_html(url: str, cookie: str | None = None) -> str:
                 ]
             )
             page = await context.new_page()
-            await page.goto(url)
+            await page.goto(url, timeout=timeout * 1000)
             html = await page.content()
             await browser.close()
             return html
-    async with httpx.AsyncClient(follow_redirects=True) as client:
+    async with httpx.AsyncClient(follow_redirects=True, timeout=timeout) as client:
         response = await client.get(url)
         response.raise_for_status()
         return response.text
@@ -117,11 +119,13 @@ def _github_headers(token: str | None) -> dict[str, str]:
     return headers
 
 
-async def _fetch_check_runs(pr_url: str, token: str | None) -> list[dict[str, Any]]:
+async def _fetch_check_runs(
+    pr_url: str, token: str | None, timeout: float = 10.0
+) -> list[dict[str, Any]]:
     """Return check runs for the PR's head commit using the GitHub REST API."""
     owner, repo, number = _parse_pr_url(pr_url)
     async with httpx.AsyncClient(
-        base_url=GITHUB_API, headers=_github_headers(token)
+        base_url=GITHUB_API, headers=_github_headers(token), timeout=timeout
     ) as client:
         pr_resp = await client.get(f"/repos/{owner}/{repo}/pulls/{number}")
         pr_resp.raise_for_status()
@@ -142,16 +146,20 @@ async def _download_log(
 
 async def _process_task(url: str, settings: Settings) -> str:
     """Download the task page, fetch failing check logs and return Markdown."""
-    html = await _fetch_task_html(url, settings.codex_cookie)
+    html = await _fetch_task_html(url, settings.codex_cookie, settings.http_timeout)
     pr_url = _extract_pr_url(html)
     if not pr_url:
         return "PR URL not found"
 
-    check_runs = await _fetch_check_runs(pr_url, settings.github_token)
+    check_runs = await _fetch_check_runs(
+        pr_url, settings.github_token, settings.http_timeout
+    )
     owner, repo, _ = _parse_pr_url(pr_url)
     sections: list[str] = []
     async with httpx.AsyncClient(
-        base_url=GITHUB_API, headers=_github_headers(settings.github_token)
+        base_url=GITHUB_API,
+        headers=_github_headers(settings.github_token),
+        timeout=settings.http_timeout,
     ) as client:
         for run in check_runs:
             if run.get("conclusion") not in FAIL_CONCLUSIONS:
@@ -184,17 +192,23 @@ def codex_task_command(
             help="Summarise logs larger than this many bytes.",
         ),
     ] = None,
+    timeout: float = typer.Option(
+        10.0, "--timeout", help="HTTP request timeout in seconds"
+    ),
 ) -> None:
     """Parse a Codex task page and print any failing GitHub checks.
 
     The generated Markdown is copied to the clipboard unless ``--no-clipboard`` is passed.
-    Use ``--log-size-threshold`` to override the summarisation threshold.
+    Use ``--log-size-threshold`` to override the summarisation threshold and
+    ``--timeout`` to adjust HTTP request timeouts.
     """
     typer.echo(f"Parsing Codex task page: {url}…")
     if log_size_threshold is not None:
-        settings = Settings(LOG_SIZE_THRESHOLD=log_size_threshold)
+        settings = Settings(LOG_SIZE_THRESHOLD=log_size_threshold, HTTP_TIMEOUT=timeout)
     else:
-        settings = Settings()  # load environment (e.g. GITHUB_TOKEN)
+        settings = Settings(
+            HTTP_TIMEOUT=timeout
+        )  # load environment (e.g. GITHUB_TOKEN)
     result = asyncio.run(_process_task(url, settings))
     if copy_to_clipboard:
         clipboard.copy(result)

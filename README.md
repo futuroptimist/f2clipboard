@@ -84,6 +84,7 @@ f2clipboard files --dir path/to/project
 ### M4 (quality of life)
 - [x] Support excluding file patterns in `files` command via `--exclude`. 💯
 - [x] Dry-run option for `files` command to print Markdown instead of copying. 💯
+- [x] Adjustable HTTP timeout for `codex-task` command via `--timeout`. 💯
 
 ## Getting Started
 
@@ -95,6 +96,7 @@ cp .env.example .env  # fill in your tokens
 # Set GITHUB_TOKEN to authenticate GitHub API requests
 # Set OPENAI_API_KEY or ANTHROPIC_API_KEY for log summarisation
 # Set CODEX_COOKIE to access private Codex tasks
+# Set HTTP_TIMEOUT to override request timeout (default 10 seconds)
 ```
 
 Generate a Markdown snippet for a Codex task:
@@ -118,6 +120,15 @@ f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123 --log-size-thres
 ```
 
 The default threshold can also be set via the ``LOG_SIZE_THRESHOLD`` environment variable in
+your ``.env`` file.
+
+Adjust the HTTP request timeout (default 10 seconds):
+
+```bash
+f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123 --timeout 5
+```
+
+The default timeout can also be set via the ``HTTP_TIMEOUT`` environment variable in
 your ``.env`` file.
 
 Generate a prompt that reads a shared chat transcript and implements any code or configuration

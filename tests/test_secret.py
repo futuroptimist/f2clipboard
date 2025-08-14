@@ -78,10 +78,12 @@ def test_redact_env_token_with_special_chars():
 
 
 def test_process_task_redacts(monkeypatch):
-    async def fake_html(url: str, cookie: str | None = None) -> str:
+    async def fake_html(
+        url: str, cookie: str | None = None, timeout: float = 10.0
+    ) -> str:
         return '<a href="https://github.com/o/r/pull/1">PR</a>'
 
-    async def fake_runs(pr_url: str, token: str | None):
+    async def fake_runs(pr_url: str, token: str | None, timeout: float = 10.0):
         return [{"id": 1, "name": "Job", "conclusion": "failure"}]
 
     async def fake_log(client, owner, repo, run_id):

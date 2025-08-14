@@ -16,6 +16,11 @@ class Settings(BaseSettings):
         alias="LOG_SIZE_THRESHOLD",
         description="Summarise logs larger than this many bytes",
     )
+    http_timeout: float = Field(
+        default=10.0,
+        alias="HTTP_TIMEOUT",
+        description="HTTP request timeout in seconds",
+    )
 
     class Config:
         env_file = ".env"
