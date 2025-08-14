@@ -102,8 +102,8 @@ def _decode_log(data: bytes) -> str:
     """
 
     if data[:2] == b"\x1f\x8b":  # gzip magic number
-        return gzip.decompress(data).decode()
-    return data.decode()
+        return gzip.decompress(data).decode("utf-8", errors="replace")
+    return data.decode("utf-8", errors="replace")
 
 
 def _github_headers(token: str | None) -> dict[str, str]:
@@ -111,7 +111,10 @@ def _github_headers(token: str | None) -> dict[str, str]:
 
     The Authorization header is included when a token is supplied.
     """
-    headers = {"Accept": "application/vnd.github+json"}
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "f2clipboard",
+    }
     if token:
         headers["Authorization"] = f"Bearer {token}"
     return headers

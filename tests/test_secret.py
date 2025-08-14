@@ -77,6 +77,19 @@ def test_redact_env_token_with_special_chars():
     assert "API_TOKEN=***" in redacted
 
 
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ('TOKEN="abcdef123456"', 'TOKEN="***"'),
+        ("TOKEN='abcdef123456'", "TOKEN='***'"),
+    ],
+)
+def test_redact_env_token_with_quotes(text: str, expected: str) -> None:
+    redacted = redact_secrets(text)
+    assert "abcdef123456" not in redacted  # pragma: allowlist secret
+    assert expected in redacted
+
+
 def test_process_task_redacts(monkeypatch):
     async def fake_html(url: str, cookie: str | None = None) -> str:
         return '<a href="https://github.com/o/r/pull/1">PR</a>'

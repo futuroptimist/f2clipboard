@@ -9,6 +9,7 @@ from f2clipboard.codex_task import (
     _extract_pr_url,
     _fetch_check_runs,
     _fetch_task_html,
+    _github_headers,
     _parse_pr_url,
     _process_task,
     codex_task_command,
@@ -108,6 +109,10 @@ def test_fetch_check_runs_includes_token(monkeypatch):
     assert captured["headers"]["Authorization"] == "Bearer tok"
 
 
+def test_github_headers_sets_user_agent():
+    assert _github_headers(None)["User-Agent"] == "f2clipboard"
+
+
 def test_decode_log_handles_gzip():
     data = gzip.compress(b"hello")
     assert _decode_log(data) == "hello"
@@ -115,6 +120,10 @@ def test_decode_log_handles_gzip():
 
 def test_decode_log_plain():
     assert _decode_log(b"plain") == "plain"
+
+
+def test_decode_log_invalid_utf8():
+    assert _decode_log(b"\xff\xfe") == "��"
 
 
 def test_download_log_handles_gzip():

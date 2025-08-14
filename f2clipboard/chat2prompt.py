@@ -11,9 +11,11 @@ import typer
 
 
 def _extract_text(html_text: str) -> str:
-    """Return plain text from HTML, preserving line breaks."""
+    """Return plain text from HTML, preserving line breaks and bullet points."""
+    html_text = re.sub(r"<li[^>]*>", "\n- ", html_text, flags=re.IGNORECASE)
+    html_text = re.sub(r"</li[^>]*>", "\n", html_text, flags=re.IGNORECASE)
     html_text = re.sub(
-        r"</?(?:br|p|div|li|h[1-6])[^>]*>", "\n", html_text, flags=re.IGNORECASE
+        r"</?(?:br|p|div|h[1-6])[^>]*>", "\n", html_text, flags=re.IGNORECASE
     )
     text = re.sub(r"<[^>]+>", "", html_text)
     text = html.unescape(text)
@@ -48,6 +50,8 @@ def chat2prompt_command(
     ),
 ) -> None:
     """Create a coding prompt from a chat transcript and copy it to the clipboard."""
+    if timeout <= 0:
+        raise typer.BadParameter("timeout must be greater than 0")
     transcript = _fetch_transcript(url, timeout=timeout)
     prompt = _build_prompt(transcript, platform)
     if copy_to_clipboard:

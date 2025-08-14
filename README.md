@@ -43,7 +43,8 @@ non-failure state → ignore.
 
 If a log exceeds 150 kB → invoke an LLM (configurable, OpenAI or Anthropic) to summarise the failure.
 
-Secrets such as API tokens are redacted from logs before summarisation or output.
+Secrets such as API tokens are redacted from logs before summarisation or output,
+including quoted environment values.
 
 Emit a Markdown snippet ready for pasting back into Codex:
 
@@ -72,7 +73,7 @@ f2clipboard files --dir path/to/project
 ### M2 (hardening)
 - [x] Playwright headless login for private Codex tasks. 💯
 - [x] Unit tests (pytest + `pytest-recording` vcr). 💯
-- [x] Secret scanning & redaction (via custom regex; GitHub `ghp_`/`gho_`/`ghu_`/`ghs_`/`ghr_`/`github_pat_`, OpenAI `sk-`, Slack `xoxb-` and `xapp-`, `Bearer` tokens, and base64-like secrets containing `+`, `/` or `=`) while preserving whitespace around `=` and `:`. 💯
+- [x] Secret scanning & redaction (via custom regex; GitHub `ghp_`/`gho_`/`ghu_`/`ghs_`/`ghr_`/`github_pat_`, OpenAI `sk-`, Slack `xoxb-` and `xapp-`, `Bearer` tokens, and base64-like secrets containing `+`, `/` or `=`) while preserving whitespace around `=` and `:` and supporting quoted values. 💯
 - [x] AWS access key redaction. 💯
 
 ### M3 (extensibility)
@@ -85,6 +86,7 @@ f2clipboard files --dir path/to/project
 - [x] Support excluding file patterns in `files` command via `--exclude`. 💯
 - [x] Dry-run option for `files` command to print Markdown instead of copying. 💯
 - [x] JSON output option for `plugins` command. 💯
+- [x] Non-interactive mode for `files` command to select all matches via `--all`. 💯
 
 ## Getting Started
 
@@ -128,6 +130,12 @@ changes it mentions:
 f2clipboard chat2prompt https://chatgpt.com/share/abcdefg
 ```
 
+The prompt is copied to your clipboard by default. To skip copying, use ``--no-clipboard``:
+
+```bash
+f2clipboard chat2prompt https://chatgpt.com/share/abcdefg --no-clipboard
+```
+
 HTML tags are stripped and block-level elements become newlines to preserve chat formatting.
 
 Specify a different platform with ``--platform``:
@@ -136,7 +144,7 @@ Specify a different platform with ``--platform``:
 f2clipboard chat2prompt https://chatgpt.com/share/abcdefg --platform anthropic
 ```
 
-Adjust the HTTP timeout (default 10 seconds):
+Adjust the HTTP timeout (must be > 0, default 10 seconds):
 
 ```bash
 f2clipboard chat2prompt https://chatgpt.com/share/abcdefg --timeout 5
@@ -159,6 +167,14 @@ Preview output without copying to the clipboard:
 ```bash
 f2clipboard files --dir path/to/project --dry-run
 ```
+
+Select all matched files without prompts:
+
+```bash
+f2clipboard files --dir path/to/project --pattern '*.py' --all
+```
+
+Combine with `--dry-run` to preview the output before copying.
 
 Use brace expansion in patterns to match multiple extensions:
 

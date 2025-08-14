@@ -251,6 +251,11 @@ def build_parser():
         action="store_true",
         help="Print formatted Markdown instead of copying to clipboard",
     )
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Select all matched files without prompting",
+    )
     return parser
 
 
@@ -262,8 +267,11 @@ def main(argv=None):
     ignore_patterns = parse_gitignore()
     if args.exclude:
         ignore_patterns.extend(args.exclude)
-    files = list_files(directory, pattern, ignore_patterns)
-    selected_files = select_files(files)
+    files = list(list_files(directory, pattern, ignore_patterns))
+    if args.all:
+        selected_files = files
+    else:
+        selected_files = select_files(files)
 
     if selected_files:
         clipboard_content = format_files_for_clipboard(
