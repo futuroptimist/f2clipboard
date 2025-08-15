@@ -42,6 +42,15 @@ def test_parse_pr_url_trailing_slash() -> None:
     )
 
 
+def test_parse_pr_url_with_query_and_fragment() -> None:
+    url = "https://github.com/owner/repo/pull/42/?w=1#discussion"
+    assert _parse_pr_url(url) == (
+        "owner",
+        "repo",
+        42,
+    )
+
+
 def test_fetch_check_runs_parses_response(monkeypatch):
     class DummyResponse:
         def __init__(self, data):
