@@ -122,6 +122,11 @@ def test_github_headers_sets_user_agent():
     assert _github_headers(None)["User-Agent"] == "f2clipboard"
 
 
+def test_github_headers_ignores_blank_token() -> None:
+    """Whitespace-only tokens should not add Authorization header."""
+    assert "Authorization" not in _github_headers("   ")
+
+
 def test_decode_log_handles_gzip():
     data = gzip.compress(b"hello")
     assert _decode_log(data) == "hello"

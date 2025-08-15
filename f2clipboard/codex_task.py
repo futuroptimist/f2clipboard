@@ -111,11 +111,13 @@ def _github_headers(token: str | None) -> dict[str, str]:
     """Return standard headers for GitHub API requests.
 
     The Authorization header is included when a token is supplied.
+    Whitespace-only tokens are ignored.
     """
     headers = {
         "Accept": "application/vnd.github+json",
         "User-Agent": "f2clipboard",
     }
+    token = token.strip() if token else None
     if token:
         headers["Authorization"] = f"Bearer {token}"
     return headers
