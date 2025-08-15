@@ -11,6 +11,7 @@ EXCLUDED_EXTENSIONS = {
     ".jpg",
     ".jpeg",
     ".png",
+    ".heic",
     ".gif",
     ".bmp",
     ".tiff",

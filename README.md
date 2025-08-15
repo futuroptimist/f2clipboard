@@ -156,6 +156,9 @@ Copy selected files from a local repository:
 f2clipboard files --dir path/to/project
 ```
 
+The command skips common binary and image files (for example, `.jpg`, `.png`, `.heic`) so the
+output contains only text-friendly content.
+
 Exclude glob patterns by repeating `--exclude`:
 
 ```bash
