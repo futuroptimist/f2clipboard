@@ -12,6 +12,21 @@ import typer
 
 def _extract_text(html_text: str) -> str:
     """Return plain text from HTML, preserving line breaks and bullet points."""
+
+    def _replace_ordered(match: re.Match[str]) -> str:
+        inner = match.group(1)
+        items = re.findall(
+            r"<li[^>]*>(.*?)</li[^>]*>", inner, flags=re.IGNORECASE | re.DOTALL
+        )
+        numbered = [f"{i}. {item}" for i, item in enumerate(items, 1)]
+        return "\n" + "\n".join(numbered) + "\n"
+
+    html_text = re.sub(
+        r"<ol[^>]*>(.*?)</ol>",
+        _replace_ordered,
+        html_text,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
     html_text = re.sub(r"<li[^>]*>", "\n- ", html_text, flags=re.IGNORECASE)
     html_text = re.sub(r"</li[^>]*>", "\n", html_text, flags=re.IGNORECASE)
     html_text = re.sub(
