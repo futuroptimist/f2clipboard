@@ -85,6 +85,7 @@ f2clipboard files --dir path/to/project
 ### M4 (quality of life)
 - [x] Support excluding file patterns in `files` command via `--exclude`. 💯
 - [x] Dry-run option for `files` command to print Markdown instead of copying. 💯
+- [x] Save `files` command output to a file via `--output`. 💯
 - [x] JSON output option for `plugins` command. 💯
 - [x] Non-interactive mode for `files` command to select all matches via `--all`. 💯
 - [x] Plugin count via `plugins --count`. 💯
@@ -172,6 +173,12 @@ Preview output without copying to the clipboard:
 
 ```bash
 f2clipboard files --dir path/to/project --dry-run
+```
+
+Save output to a Markdown file:
+
+```bash
+f2clipboard files --dir path/to/project --output snippet.md
 ```
 
 Select all matched files without prompts:

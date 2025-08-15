@@ -24,6 +24,11 @@ def files_command(
     select_all: bool = typer.Option(
         False, "--all", help="Select all matched files without prompting"
     ),
+    output: str | None = typer.Option(
+        None,
+        "--output",
+        help="Write Markdown output to a file instead of copying to clipboard",
+    ),
 ) -> None:
     """Invoke the legacy script to copy selected files to the clipboard."""
     script_path = Path(__file__).resolve().parent.parent / "f2clipboard.py"
@@ -45,4 +50,6 @@ def files_command(
         argv.append("--dry-run")
     if select_all:
         argv.append("--all")
+    if output is not None:
+        argv.extend(["--output", output])
     module.main(argv)
