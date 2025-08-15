@@ -82,10 +82,11 @@ def _extract_pr_url(html: str) -> str | None:
 def _parse_pr_url(pr_url: str) -> tuple[str, str, int]:
     """Extract owner, repo and pull number from a PR URL.
 
-    Trailing slashes are tolerated and ignored.
+    Trailing slashes, query strings and fragments are tolerated and ignored.
     """
+    pr_url = pr_url.split("?", 1)[0].split("#", 1)[0].rstrip("/")
     pattern = (
-        r"https://github.com/(?P<owner>[^/]+)/(?P<repo>[^/]+)/pull/(?P<number>\d+)/?"
+        r"https://github.com/(?P<owner>[^/]+)/(?P<repo>[^/]+)/pull/(?P<number>\d+)"
     )
     match = re.match(pattern, pr_url)
     if not match:  # pragma: no cover - defensive programming
