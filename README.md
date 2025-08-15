@@ -137,6 +137,7 @@ f2clipboard chat2prompt https://chatgpt.com/share/abcdefg --no-clipboard
 ```
 
 HTML tags are stripped and block-level elements become newlines to preserve chat formatting.
+Unordered lists are converted to `-` bullets and ordered lists become numbered items.
 
 Specify a different platform with ``--platform``:
 
