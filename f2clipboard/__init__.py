@@ -26,16 +26,23 @@ _loaded_plugins: list[str] = []
 def plugins_command(
     json_output: bool = typer.Option(
         False, "--json", help="Output plugin names as JSON."
-    )
+    ),
+    count: bool = typer.Option(
+        False, "--count", help="Print the number of installed plugins."
+    ),
 ) -> None:
-    """List registered plugin names."""
+    """List registered plugin names or counts."""
     if not _loaded_plugins:
-        if json_output:
+        if count:
+            typer.echo("0")
+        elif json_output:
             typer.echo("[]")
         else:
             typer.echo("No plugins installed")
         return
-    if json_output:
+    if count:
+        typer.echo(str(len(_loaded_plugins)))
+    elif json_output:
         typer.echo(json.dumps(_loaded_plugins))
     else:
         for name in _loaded_plugins:

@@ -87,6 +87,7 @@ f2clipboard files --dir path/to/project
 - [x] Dry-run option for `files` command to print Markdown instead of copying. 💯
 - [x] JSON output option for `plugins` command. 💯
 - [x] Non-interactive mode for `files` command to select all matches via `--all`. 💯
+- [x] Plugin count via `plugins --count`. 💯
 
 ## Getting Started
 
@@ -225,6 +226,12 @@ Output as JSON:
 
 ```bash
 f2clipboard plugins --json
+```
+
+Show the number of installed plugins:
+
+```bash
+f2clipboard plugins --count
 ```
 
 The first bundled plugin summarises Jira issues:
