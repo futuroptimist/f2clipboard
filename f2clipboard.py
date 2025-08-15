@@ -256,6 +256,10 @@ def build_parser():
         action="store_true",
         help="Select all matched files without prompting",
     )
+    parser.add_argument(
+        "--output",
+        help="Write formatted Markdown to a file instead of copying to clipboard",
+    )
     return parser
 
 
@@ -277,7 +281,11 @@ def main(argv=None):
         clipboard_content = format_files_for_clipboard(
             selected_files, directory, ignore_patterns
         )
-        if args.dry_run:
+        if args.output:
+            with open(args.output, "w", encoding="utf-8") as f:
+                f.write(clipboard_content)
+            print(f"📄 The formatted files have been written to {args.output}.")
+        elif args.dry_run:
             print(clipboard_content)
         else:
             clipboard.copy(clipboard_content)
