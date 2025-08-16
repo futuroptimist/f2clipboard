@@ -171,7 +171,8 @@ f2clipboard files --dir path/to/project
 ```
 
 The command skips common binary and image files (for example, `.jpg`, `.png`, `.heic`) so the
-output contains only text-friendly content.
+output contains only text-friendly content. It also honours patterns from `.gitignore`,
+stripping any inline `#` comments.
 
 Exclude glob patterns by repeating `--exclude`:
 
