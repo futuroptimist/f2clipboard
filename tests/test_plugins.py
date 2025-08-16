@@ -1,7 +1,9 @@
 """Tests for plugin interface."""
 
 import importlib
+import sys
 from importlib.metadata import EntryPoint
+from types import ModuleType
 
 from typer.testing import CliRunner
 
@@ -32,6 +34,36 @@ def test_plugin_loaded(monkeypatch):
     f2clipboard._load_plugins()
     names = [cmd.name for cmd in f2clipboard.app.registered_commands]
     assert "hello" in names
+
+
+def test_load_plugins_idempotent(monkeypatch):
+    mod = ModuleType("sample_plugin_mod")
+
+    def sample_plugin(app):
+        @app.command("hello")
+        def hello_cmd() -> None:  # pragma: no cover - invoked via Typer
+            pass
+
+    mod.plugin = sample_plugin
+    monkeypatch.setitem(sys.modules, mod.__name__, mod)
+
+    ep = EntryPoint(
+        name="sample", value=f"{mod.__name__}:plugin", group="f2clipboard.plugins"
+    )
+
+    def fake_entry_points(*args, **kwargs):
+        if kwargs.get("group") == "f2clipboard.plugins":
+            return [ep]
+        return []
+
+    monkeypatch.setattr("importlib.metadata.entry_points", lambda *a, **k: [])
+    importlib.reload(f2clipboard)
+    monkeypatch.setattr(f2clipboard, "entry_points", fake_entry_points)
+    f2clipboard._loaded_plugins = []
+    f2clipboard._plugin_versions = {}
+    f2clipboard._load_plugins()
+    f2clipboard._load_plugins()
+    assert f2clipboard._loaded_plugins == ["sample"]
 
 
 def test_plugins_command_lists_plugins(monkeypatch):

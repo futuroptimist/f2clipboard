@@ -83,12 +83,14 @@ def _load_plugins() -> None:
     """Load registered entry-point plugins."""
     for ep in entry_points(group="f2clipboard.plugins"):
         try:
+            if ep.name in _loaded_plugins:
+                # Skip already loaded plugins to avoid duplicate command registration
+                continue
             plugin = ep.load()
             plugin(app)
-            if ep.name not in _loaded_plugins:
-                _loaded_plugins.append(ep.name)
-                dist = getattr(ep, "dist", None)
-                _plugin_versions[ep.name] = getattr(dist, "version", "unknown")
+            _loaded_plugins.append(ep.name)
+            dist = getattr(ep, "dist", None)
+            _plugin_versions[ep.name] = getattr(dist, "version", "unknown")
         except Exception as exc:  # pragma: no cover - defensive
             logging.getLogger(__name__).warning(
                 "Failed to load plugin %s: %s", ep.name, exc
