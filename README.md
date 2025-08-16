@@ -103,6 +103,7 @@ cp .env.example .env  # fill in your tokens
 # Set GITHUB_TOKEN to authenticate GitHub API requests
 # Whitespace-only values are ignored
 # Set OPENAI_API_KEY or ANTHROPIC_API_KEY for log summarisation
+# Set OPENAI_MODEL or ANTHROPIC_MODEL to choose the summarisation model
 # Set CODEX_COOKIE to access private Codex tasks
 ```
 
@@ -118,6 +119,12 @@ To skip copying to the clipboard, pass ``--no-clipboard``:
 
 ```bash
 f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123 --no-clipboard
+```
+
+Override the default model with ``--openai-model`` or ``--anthropic-model``:
+
+```bash
+f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123 --openai-model gpt-4o-mini
 ```
 
 Adjust the log size threshold for summarisation with ``--log-size-threshold``:
