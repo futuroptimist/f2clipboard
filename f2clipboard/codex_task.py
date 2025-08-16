@@ -190,6 +190,14 @@ def codex_task_command(
             help="Summarise logs larger than this many bytes.",
         ),
     ] = None,
+    openai_model: Annotated[
+        str | None,
+        typer.Option("--openai-model", help="OpenAI model for summarising logs."),
+    ] = None,
+    anthropic_model: Annotated[
+        str | None,
+        typer.Option("--anthropic-model", help="Anthropic model for summarising logs."),
+    ] = None,
 ) -> None:
     """Parse a Codex task page and print any failing GitHub checks.
 
@@ -197,10 +205,14 @@ def codex_task_command(
     Use ``--log-size-threshold`` to override the summarisation threshold.
     """
     typer.echo(f"Parsing Codex task page: {url}…")
+    settings_kwargs = {}
     if log_size_threshold is not None:
-        settings = Settings(LOG_SIZE_THRESHOLD=log_size_threshold)
-    else:
-        settings = Settings()  # load environment (e.g. GITHUB_TOKEN)
+        settings_kwargs["LOG_SIZE_THRESHOLD"] = log_size_threshold
+    if openai_model is not None:
+        settings_kwargs["OPENAI_MODEL"] = openai_model
+    if anthropic_model is not None:
+        settings_kwargs["ANTHROPIC_MODEL"] = anthropic_model
+    settings = Settings(**settings_kwargs) if settings_kwargs else Settings()
     result = asyncio.run(_process_task(url, settings))
     if copy_to_clipboard:
         clipboard.copy(result)
