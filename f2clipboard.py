@@ -52,6 +52,8 @@ EXCLUDED_EXTENSIONS = {
     ".psd",
     ".ai",
     ".sketch",
+    # System files
+    ".ds_store",
 }
 
 

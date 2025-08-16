@@ -14,3 +14,7 @@ def test_is_binary_or_image_file_identifies_heic():
 
 def test_is_binary_or_image_file_allows_text():
     assert not module.is_binary_or_image_file("notes.txt")
+
+
+def test_is_binary_or_image_file_skips_ds_store():
+    assert module.is_binary_or_image_file(".DS_Store")
