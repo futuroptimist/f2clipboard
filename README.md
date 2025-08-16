@@ -89,6 +89,7 @@ f2clipboard files --dir path/to/project
 - [x] JSON output option for `plugins` command. 💯
 - [x] Non-interactive mode for `files` command to select all matches via `--all`. 💯
 - [x] Plugin count via `plugins --count`. 💯
+- [x] Include additional file patterns in `files` command via `--include`. 💯
 
 ## Getting Started
 
@@ -167,6 +168,12 @@ Exclude glob patterns by repeating `--exclude`:
 
 ```bash
 f2clipboard files --dir path/to/project --exclude 'node_modules/*' --exclude '*.log'
+```
+
+Include extra glob patterns by repeating `--include`:
+
+```bash
+f2clipboard files --pattern '*.py' --include '*.md' --include '*.txt'
 ```
 
 Preview output without copying to the clipboard:

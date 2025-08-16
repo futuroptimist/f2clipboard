@@ -13,6 +13,11 @@ def files_command(
     pattern: str = typer.Option(
         "*", "--pattern", help="File glob pattern to match (e.g. *.py)"
     ),
+    include: list[str] = typer.Option(
+        [],
+        "--include",
+        help="Additional glob patterns to include (can be used multiple times)",
+    ),
     exclude: list[str] = typer.Option(
         [],
         "--exclude",
@@ -44,6 +49,8 @@ def files_command(
     module = module_from_spec(spec)
     spec.loader.exec_module(module)
     argv = ["--dir", directory, "--pattern", pattern]
+    for pat in include:
+        argv.extend(["--include", pat])
     for pat in exclude:
         argv.extend(["--exclude", pat])
     if dry_run:
