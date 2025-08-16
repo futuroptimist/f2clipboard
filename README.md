@@ -91,6 +91,7 @@ f2clipboard files --dir path/to/project
 - [x] Plugin count via `plugins --count`. 💯
 - [x] Show plugin versions via `plugins --versions`. 💯
 - [x] Include additional file patterns in `files` command via `--include`. 💯
+- [x] Sort plugin names via `plugins --sort`. 💯
 
 ## Getting Started
 
@@ -235,6 +236,12 @@ List installed plugins:
 
 ```bash
 f2clipboard plugins
+```
+
+Sort them alphabetically:
+
+```bash
+f2clipboard plugins --sort
 ```
 
 Output as JSON:

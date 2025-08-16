@@ -185,3 +185,57 @@ def test_plugins_command_json_versions_no_plugins(monkeypatch):
     result = runner.invoke(f2clipboard.app, ["plugins", "--versions", "--json"])
     assert result.exit_code == 0
     assert result.stdout.strip() == "{}"
+
+
+def _setup_two_plugins(monkeypatch):
+    ep1 = EntryPoint(
+        name="zeta", value="tests.test_plugins:plugin", group="f2clipboard.plugins"
+    )
+    ep2 = EntryPoint(
+        name="alpha", value="tests.test_plugins:plugin", group="f2clipboard.plugins"
+    )
+
+    def fake_entry_points(*args, **kwargs):
+        if kwargs.get("group") == "f2clipboard.plugins":
+            return [ep1, ep2]
+        return []
+
+    importlib.reload(f2clipboard)
+    monkeypatch.setattr(f2clipboard, "entry_points", fake_entry_points)
+    f2clipboard._loaded_plugins = []
+    f2clipboard._plugin_versions = {}
+    f2clipboard._load_plugins()
+
+
+def test_plugins_command_sort(monkeypatch):
+    _setup_two_plugins(monkeypatch)
+    runner = CliRunner()
+    result = runner.invoke(f2clipboard.app, ["plugins", "--sort"])
+    assert result.exit_code == 0
+    assert result.stdout.strip().splitlines() == ["alpha", "zeta"]
+
+
+def test_plugins_command_json_sort(monkeypatch):
+    _setup_two_plugins(monkeypatch)
+    runner = CliRunner()
+    result = runner.invoke(f2clipboard.app, ["plugins", "--json", "--sort"])
+    assert result.exit_code == 0
+    assert result.stdout.strip() == '["alpha", "zeta"]'
+
+
+def test_plugins_command_versions_sort(monkeypatch):
+    _setup_two_plugins(monkeypatch)
+    runner = CliRunner()
+    result = runner.invoke(f2clipboard.app, ["plugins", "--versions", "--sort"])
+    assert result.exit_code == 0
+    assert result.stdout.strip().splitlines() == ["alpha unknown", "zeta unknown"]
+
+
+def test_plugins_command_versions_json_sort(monkeypatch):
+    _setup_two_plugins(monkeypatch)
+    runner = CliRunner()
+    result = runner.invoke(
+        f2clipboard.app, ["plugins", "--versions", "--json", "--sort"]
+    )
+    assert result.exit_code == 0
+    assert result.stdout.strip() == '{"alpha": "unknown", "zeta": "unknown"}'
