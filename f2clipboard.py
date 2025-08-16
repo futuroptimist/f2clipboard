@@ -1,6 +1,7 @@
 import argparse
 import fnmatch
 import os
+import re
 import shutil
 
 import clipboard
@@ -58,16 +59,19 @@ EXCLUDED_EXTENSIONS = {
 
 
 def parse_gitignore(gitignore_path=".gitignore"):
-    """Parse the .gitignore file and return a list of patterns, including '.git' always."""
-    patterns = [".git"]  # Always ignore .git directory
+    """Parse the .gitignore file and return a list of patterns.
+
+    The `.git` directory is always ignored. Inline comments beginning with `#` are stripped,
+    and escaped hashes ('\\#') are unescaped.
+    """
+
+    patterns = [".git"]
     if os.path.exists(gitignore_path):
         with open(gitignore_path, "r") as file:
-            lines = file.readlines()
-
-        for line in lines:
-            stripped = line.strip()
-            if stripped and not stripped.startswith("#"):
-                patterns.append(stripped)
+            for line in file:
+                cleaned = re.sub(r"(?<!\\)#.*", "", line).strip().replace("\\#", "#")
+                if cleaned:
+                    patterns.append(cleaned)
     return patterns
 
 

@@ -91,6 +91,7 @@ f2clipboard files --dir path/to/project
 - [x] Plugin count via `plugins --count`. 💯
 - [x] Show plugin versions via `plugins --versions`. 💯
 - [x] Include additional file patterns in `files` command via `--include`. 💯
+- [x] Sort plugin names via `plugins --sort`. 💯
 
 ## Getting Started
 
@@ -102,6 +103,7 @@ cp .env.example .env  # fill in your tokens
 # Set GITHUB_TOKEN to authenticate GitHub API requests
 # Whitespace-only values are ignored
 # Set OPENAI_API_KEY or ANTHROPIC_API_KEY for log summarisation
+# Set OPENAI_MODEL or ANTHROPIC_MODEL to choose the summarisation model
 # Set CODEX_COOKIE to access private Codex tasks
 ```
 
@@ -117,6 +119,12 @@ To skip copying to the clipboard, pass ``--no-clipboard``:
 
 ```bash
 f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123 --no-clipboard
+```
+
+Override the default model with ``--openai-model`` or ``--anthropic-model``:
+
+```bash
+f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123 --openai-model gpt-4o-mini
 ```
 
 Adjust the log size threshold for summarisation with ``--log-size-threshold``:
@@ -162,8 +170,9 @@ Copy selected files from a local repository:
 f2clipboard files --dir path/to/project
 ```
 
-The command skips common binary, image, and system files (for example, `.jpg`, `.png`, `.heic`,
-`.DS_Store`) so the output contains only text-friendly content.
+The command skips common binary and image files (for example, `.jpg`, `.png`, `.heic`) so the
+output contains only text-friendly content. It also honours patterns from `.gitignore`,
+stripping any inline `#` comments.
 
 Exclude glob patterns by repeating `--exclude`:
 
@@ -235,6 +244,12 @@ List installed plugins:
 
 ```bash
 f2clipboard plugins
+```
+
+Sort them alphabetically:
+
+```bash
+f2clipboard plugins --sort
 ```
 
 Output as JSON:
