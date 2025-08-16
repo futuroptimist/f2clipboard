@@ -88,10 +88,13 @@ def expand_pattern(pattern):
     return [f"{prefix}{opt}{suffix}" for opt in options]
 
 
-def list_files(directory, pattern="*", ignore_patterns=[]):
-    """Recursively list files in a directory matching the pattern, skipping ignored and binary/image files."""
+def list_files(directory, pattern="*", include_patterns=None, ignore_patterns=[]):
+    """Recursively list files in a directory matching any of the patterns, skipping ignored and binary/image files."""
     # Expand brace patterns into multiple patterns
     patterns = expand_pattern(pattern)
+    if include_patterns:
+        for pat in include_patterns:
+            patterns.extend(expand_pattern(pat))
 
     for root, dirs, files in os.walk(directory):
         # Skip directories in ignore patterns
@@ -242,6 +245,12 @@ def build_parser():
         "--pattern", default="*", help="File glob pattern to match (e.g. *.py or *.py)"
     )
     parser.add_argument(
+        "--include",
+        action="append",
+        default=[],
+        help="Additional glob patterns to include (may be repeated)",
+    )
+    parser.add_argument(
         "--exclude",
         action="append",
         default=[],
@@ -272,7 +281,14 @@ def main(argv=None):
     ignore_patterns = parse_gitignore()
     if args.exclude:
         ignore_patterns.extend(args.exclude)
-    files = list(list_files(directory, pattern, ignore_patterns))
+    files = list(
+        list_files(
+            directory,
+            pattern=pattern,
+            include_patterns=args.include,
+            ignore_patterns=ignore_patterns,
+        )
+    )
     if args.all:
         selected_files = files
     else:
