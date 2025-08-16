@@ -47,6 +47,7 @@ def test_plugins_command_lists_plugins(monkeypatch):
     importlib.reload(f2clipboard)
     monkeypatch.setattr(f2clipboard, "entry_points", fake_entry_points)
     f2clipboard._loaded_plugins = []
+    f2clipboard._plugin_versions = {}
     f2clipboard._load_plugins()
     runner = CliRunner()
     result = runner.invoke(f2clipboard.app, ["plugins"])
@@ -67,6 +68,7 @@ def test_plugins_command_json_lists_plugins(monkeypatch):
     importlib.reload(f2clipboard)
     monkeypatch.setattr(f2clipboard, "entry_points", fake_entry_points)
     f2clipboard._loaded_plugins = []
+    f2clipboard._plugin_versions = {}
     f2clipboard._load_plugins()
     runner = CliRunner()
     result = runner.invoke(f2clipboard.app, ["plugins", "--json"])
@@ -78,6 +80,7 @@ def test_plugins_command_json_no_plugins(monkeypatch):
     importlib.reload(f2clipboard)
     monkeypatch.setattr(f2clipboard, "entry_points", lambda *a, **k: [])
     f2clipboard._loaded_plugins = []
+    f2clipboard._plugin_versions = {}
     f2clipboard._load_plugins()
     runner = CliRunner()
     result = runner.invoke(f2clipboard.app, ["plugins", "--json"])
@@ -98,6 +101,7 @@ def test_plugins_command_count(monkeypatch):
     importlib.reload(f2clipboard)
     monkeypatch.setattr(f2clipboard, "entry_points", fake_entry_points)
     f2clipboard._loaded_plugins = []
+    f2clipboard._plugin_versions = {}
     f2clipboard._load_plugins()
     runner = CliRunner()
     result = runner.invoke(f2clipboard.app, ["plugins", "--count"])
@@ -109,8 +113,75 @@ def test_plugins_command_count_no_plugins(monkeypatch):
     importlib.reload(f2clipboard)
     monkeypatch.setattr(f2clipboard, "entry_points", lambda *a, **k: [])
     f2clipboard._loaded_plugins = []
+    f2clipboard._plugin_versions = {}
     f2clipboard._load_plugins()
     runner = CliRunner()
     result = runner.invoke(f2clipboard.app, ["plugins", "--count"])
     assert result.exit_code == 0
     assert result.stdout.strip() == "0"
+
+
+def test_plugins_command_versions(monkeypatch):
+    ep = EntryPoint(
+        name="sample", value="tests.test_plugins:plugin", group="f2clipboard.plugins"
+    )
+
+    def fake_entry_points(*args, **kwargs):
+        if kwargs.get("group") == "f2clipboard.plugins":
+            return [ep]
+        return []
+
+    importlib.reload(f2clipboard)
+    monkeypatch.setattr(f2clipboard, "entry_points", fake_entry_points)
+    f2clipboard._loaded_plugins = []
+    f2clipboard._plugin_versions = {}
+    f2clipboard._load_plugins()
+    runner = CliRunner()
+    result = runner.invoke(f2clipboard.app, ["plugins", "--versions"])
+    assert result.exit_code == 0
+    assert "sample unknown" in result.stdout
+
+
+def test_plugins_command_json_versions(monkeypatch):
+    ep = EntryPoint(
+        name="sample", value="tests.test_plugins:plugin", group="f2clipboard.plugins"
+    )
+
+    def fake_entry_points(*args, **kwargs):
+        if kwargs.get("group") == "f2clipboard.plugins":
+            return [ep]
+        return []
+
+    importlib.reload(f2clipboard)
+    monkeypatch.setattr(f2clipboard, "entry_points", fake_entry_points)
+    f2clipboard._loaded_plugins = []
+    f2clipboard._plugin_versions = {}
+    f2clipboard._load_plugins()
+    runner = CliRunner()
+    result = runner.invoke(f2clipboard.app, ["plugins", "--versions", "--json"])
+    assert result.exit_code == 0
+    assert result.stdout.strip() == '{"sample": "unknown"}'
+
+
+def test_plugins_command_versions_no_plugins(monkeypatch):
+    importlib.reload(f2clipboard)
+    monkeypatch.setattr(f2clipboard, "entry_points", lambda *a, **k: [])
+    f2clipboard._loaded_plugins = []
+    f2clipboard._plugin_versions = {}
+    f2clipboard._load_plugins()
+    runner = CliRunner()
+    result = runner.invoke(f2clipboard.app, ["plugins", "--versions"])
+    assert result.exit_code == 0
+    assert "No plugins installed" in result.stdout
+
+
+def test_plugins_command_json_versions_no_plugins(monkeypatch):
+    importlib.reload(f2clipboard)
+    monkeypatch.setattr(f2clipboard, "entry_points", lambda *a, **k: [])
+    f2clipboard._loaded_plugins = []
+    f2clipboard._plugin_versions = {}
+    f2clipboard._load_plugins()
+    runner = CliRunner()
+    result = runner.invoke(f2clipboard.app, ["plugins", "--versions", "--json"])
+    assert result.exit_code == 0
+    assert result.stdout.strip() == "{}"

@@ -21,6 +21,8 @@ app.command("files")(files_command)
 
 _loaded_plugins: list[str] = []
 
+_plugin_versions: dict[str, str] = {}
+
 
 @app.command("plugins")
 def plugins_command(
@@ -30,20 +32,27 @@ def plugins_command(
     count: bool = typer.Option(
         False, "--count", help="Print the number of installed plugins."
     ),
+    versions: bool = typer.Option(False, "--versions", help="Show plugin versions."),
 ) -> None:
-    """List registered plugin names or counts."""
+    """List registered plugin names, counts or versions."""
     if not _loaded_plugins:
         if count:
             typer.echo("0")
         elif json_output:
-            typer.echo("[]")
+            typer.echo("{}" if versions else "[]")
         else:
             typer.echo("No plugins installed")
         return
     if count:
         typer.echo(str(len(_loaded_plugins)))
     elif json_output:
-        typer.echo(json.dumps(_loaded_plugins))
+        if versions:
+            typer.echo(json.dumps(_plugin_versions))
+        else:
+            typer.echo(json.dumps(_loaded_plugins))
+    elif versions:
+        for name in _loaded_plugins:
+            typer.echo(f"{name} {_plugin_versions.get(name, 'unknown')}")
     else:
         for name in _loaded_plugins:
             typer.echo(name)
@@ -78,6 +87,8 @@ def _load_plugins() -> None:
             plugin(app)
             if ep.name not in _loaded_plugins:
                 _loaded_plugins.append(ep.name)
+                dist = getattr(ep, "dist", None)
+                _plugin_versions[ep.name] = getattr(dist, "version", "unknown")
         except Exception as exc:  # pragma: no cover - defensive
             logging.getLogger(__name__).warning(
                 "Failed to load plugin %s: %s", ep.name, exc

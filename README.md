@@ -89,6 +89,7 @@ f2clipboard files --dir path/to/project
 - [x] JSON output option for `plugins` command. 💯
 - [x] Non-interactive mode for `files` command to select all matches via `--all`. 💯
 - [x] Plugin count via `plugins --count`. 💯
+- [x] Show plugin versions via `plugins --versions`. 💯
 
 ## Getting Started
 
@@ -239,6 +240,18 @@ Show the number of installed plugins:
 
 ```bash
 f2clipboard plugins --count
+```
+
+Show plugin versions:
+
+```bash
+f2clipboard plugins --versions
+```
+
+Output versions as JSON:
+
+```bash
+f2clipboard plugins --versions --json
 ```
 
 The first bundled plugin summarises Jira issues:
