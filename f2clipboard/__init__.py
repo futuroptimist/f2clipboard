@@ -36,6 +36,7 @@ def plugins_command(
     sort: bool = typer.Option(
         False, "--sort", help="Sort plugin names alphabetically."
     ),
+    reverse: bool = typer.Option(False, "--reverse", help="Reverse plugin order."),
 ) -> None:
     """List registered plugin names, counts or versions."""
     if not _loaded_plugins:
@@ -46,7 +47,12 @@ def plugins_command(
         else:
             typer.echo("No plugins installed")
         return
-    names = sorted(_loaded_plugins) if sort else list(_loaded_plugins)
+    if sort:
+        names = sorted(_loaded_plugins, reverse=reverse)
+    elif reverse:
+        names = list(reversed(_loaded_plugins))
+    else:
+        names = list(_loaded_plugins)
     if count:
         typer.echo(str(len(_loaded_plugins)))
     elif json_output:
