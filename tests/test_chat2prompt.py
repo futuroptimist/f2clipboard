@@ -34,6 +34,11 @@ def test_extract_text_converts_ordered_list_to_numbered_items():
     assert _extract_text(html) == "1. First\n2. Second"
 
 
+def test_extract_text_respects_ordered_list_start():
+    html = '<ol start="3"><li>First</li><li>Second</li></ol>'
+    assert _extract_text(html) == "3. First\n4. Second"
+
+
 def test_chat2prompt_command_copies_prompt(monkeypatch, capsys):
     def fake_fetch(url: str, timeout: float) -> str:
         assert url == "http://chat"
