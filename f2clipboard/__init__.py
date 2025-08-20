@@ -36,6 +36,9 @@ def plugins_command(
     sort: bool = typer.Option(
         False, "--sort", help="Sort plugin names alphabetically."
     ),
+    filter_: str | None = typer.Option(
+        None, "--filter", help="Only include plugin names containing this substring."
+    ),
 ) -> None:
     """List registered plugin names, counts or versions."""
     if not _loaded_plugins:
@@ -46,9 +49,21 @@ def plugins_command(
         else:
             typer.echo("No plugins installed")
         return
-    names = sorted(_loaded_plugins) if sort else list(_loaded_plugins)
+    names = list(_loaded_plugins)
+    if filter_:
+        names = [name for name in names if filter_ in name]
+    if not names:
+        if count:
+            typer.echo("0")
+        elif json_output:
+            typer.echo("{}" if versions else "[]")
+        else:
+            typer.echo("No plugins installed")
+        return
+    if sort:
+        names = sorted(names)
     if count:
-        typer.echo(str(len(_loaded_plugins)))
+        typer.echo(str(len(names)))
     elif json_output:
         if versions:
             data = {name: _plugin_versions.get(name, "unknown") for name in names}
