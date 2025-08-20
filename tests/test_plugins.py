@@ -283,3 +283,27 @@ def test_plugins_command_versions_json_sort(monkeypatch):
     )
     assert result.exit_code == 0
     assert result.stdout.strip() == '{"alpha": "unknown", "zeta": "unknown"}'
+
+
+def test_plugins_command_filter(monkeypatch):
+    _setup_two_plugins(monkeypatch)
+    runner = CliRunner()
+    result = runner.invoke(f2clipboard.app, ["plugins", "--filter", "alpha"])
+    assert result.exit_code == 0
+    assert result.stdout.strip() == "alpha"
+
+
+def test_plugins_command_json_filter(monkeypatch):
+    _setup_two_plugins(monkeypatch)
+    runner = CliRunner()
+    result = runner.invoke(f2clipboard.app, ["plugins", "--json", "--filter", "z"])
+    assert result.exit_code == 0
+    assert result.stdout.strip() == '["zeta"]'
+
+
+def test_plugins_command_filter_no_match(monkeypatch):
+    _setup_two_plugins(monkeypatch)
+    runner = CliRunner()
+    result = runner.invoke(f2clipboard.app, ["plugins", "--filter", "beta"])
+    assert result.exit_code == 0
+    assert "No plugins installed" in result.stdout

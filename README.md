@@ -92,6 +92,7 @@ f2clipboard files --dir path/to/project
 - [x] Show plugin versions via `plugins --versions`. 💯
 - [x] Include additional file patterns in `files` command via `--include`. 💯
 - [x] Sort plugin names via `plugins --sort`. 💯
+- [x] Filter plugin names via `plugins --filter`. 💯
 
 ## Getting Started
 
@@ -251,6 +252,12 @@ Sort them alphabetically:
 
 ```bash
 f2clipboard plugins --sort
+```
+
+Filter by substring:
+
+```bash
+f2clipboard plugins --filter jira
 ```
 
 Output as JSON:
