@@ -65,7 +65,7 @@ f2clipboard files --dir path/to/project
 - [x] Fetch PR URL from Codex task HTML (unauthenticated test page). 💯
 
 ### M1 (minimum lovable product)
-- [x] Parse check-suites with GitHub REST v3. 💯
+- [x] Parse check-suites with GitHub REST v3 (API version 2022-11-28). 💯
 - [x] Download raw logs; gzip-decode when necessary. 💯
 - [x] Size-gate logs → summarise via LLM. 💯
 - [x] Write Markdown artefact to `stdout` **and** clipboard. 💯
@@ -151,7 +151,8 @@ f2clipboard chat2prompt https://chatgpt.com/share/abcdefg --no-clipboard
 ```
 
 HTML tags are stripped and block-level elements become newlines to preserve chat formatting.
-Unordered lists are converted to `-` bullets and ordered lists become numbered items.
+Unordered lists are converted to `-` bullets and ordered lists become numbered items,
+honouring any HTML `start` attributes.
 
 Specify a different platform with ``--platform``:
 
@@ -269,6 +270,12 @@ Show the number of installed plugins:
 
 ```bash
 f2clipboard plugins --count
+```
+
+Output the plugin count as JSON:
+
+```bash
+f2clipboard plugins --count --json
 ```
 
 Show plugin versions:

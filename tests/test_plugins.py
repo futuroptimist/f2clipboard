@@ -153,6 +153,18 @@ def test_plugins_command_count_no_plugins(monkeypatch):
     assert result.stdout.strip() == "0"
 
 
+def test_plugins_command_count_json_no_plugins(monkeypatch):
+    importlib.reload(f2clipboard)
+    monkeypatch.setattr(f2clipboard, "entry_points", lambda *a, **k: [])
+    f2clipboard._loaded_plugins = []
+    f2clipboard._plugin_versions = {}
+    f2clipboard._load_plugins()
+    runner = CliRunner()
+    result = runner.invoke(f2clipboard.app, ["plugins", "--count", "--json"])
+    assert result.exit_code == 0
+    assert result.stdout.strip() == '{"count": 0}'
+
+
 def test_plugins_command_versions(monkeypatch):
     ep = EntryPoint(
         name="sample", value="tests.test_plugins:plugin", group="f2clipboard.plugins"

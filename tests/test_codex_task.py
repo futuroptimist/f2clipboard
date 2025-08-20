@@ -122,6 +122,11 @@ def test_github_headers_sets_user_agent():
     assert _github_headers(None)["User-Agent"] == "f2clipboard"
 
 
+def test_github_headers_sets_api_version() -> None:
+    """GitHub API version header should be included."""
+    assert _github_headers(None)["X-GitHub-Api-Version"] == "2022-11-28"
+
+
 def test_github_headers_ignores_blank_token() -> None:
     """Whitespace-only tokens should not add Authorization header."""
     assert "Authorization" not in _github_headers("   ")

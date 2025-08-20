@@ -20,7 +20,6 @@ app.command("chat2prompt")(chat2prompt_command)
 app.command("files")(files_command)
 
 _loaded_plugins: list[str] = []
-
 _plugin_versions: dict[str, str] = {}
 
 
@@ -41,28 +40,44 @@ def plugins_command(
     ),
 ) -> None:
     """List registered plugin names, counts or versions."""
+
+    # No plugins loaded at all: mirror existing behavior
     if not _loaded_plugins:
-        if count:
+        count_value = 0
+        if count and json_output:
+            typer.echo(json.dumps({"count": count_value}))
+        elif count:
             typer.echo("0")
         elif json_output:
             typer.echo("{}" if versions else "[]")
         else:
             typer.echo("No plugins installed")
         return
+
+    # Start from loaded plugins, then apply filter & sort deterministically
     names = list(_loaded_plugins)
     if filter_:
         names = [name for name in names if filter_ in name]
+
+    # If filter removes everything, mirror empty behavior again
     if not names:
-        if count:
+        if count and json_output:
+            typer.echo(json.dumps({"count": 0}))
+        elif count:
             typer.echo("0")
         elif json_output:
             typer.echo("{}" if versions else "[]")
         else:
             typer.echo("No plugins installed")
         return
+
     if sort:
         names = sorted(names)
-    if count:
+
+    # Counts should reflect the (possibly filtered) list.
+    if count and json_output:
+        typer.echo(json.dumps({"count": len(names)}))
+    elif count:
         typer.echo(str(len(names)))
     elif json_output:
         if versions:
