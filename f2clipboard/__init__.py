@@ -39,7 +39,10 @@ def plugins_command(
 ) -> None:
     """List registered plugin names, counts or versions."""
     if not _loaded_plugins:
-        if count:
+        count_value = 0
+        if count and json_output:
+            typer.echo(json.dumps({"count": count_value}))
+        elif count:
             typer.echo("0")
         elif json_output:
             typer.echo("{}" if versions else "[]")
@@ -47,7 +50,9 @@ def plugins_command(
             typer.echo("No plugins installed")
         return
     names = sorted(_loaded_plugins) if sort else list(_loaded_plugins)
-    if count:
+    if count and json_output:
+        typer.echo(json.dumps({"count": len(_loaded_plugins)}))
+    elif count:
         typer.echo(str(len(_loaded_plugins)))
     elif json_output:
         if versions:
