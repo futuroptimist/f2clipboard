@@ -21,6 +21,7 @@ except ImportError:  # pragma: no cover - Playwright may be missing
     async_playwright = None  # type: ignore[assignment]
 
 GITHUB_API = "https://api.github.com"
+GITHUB_API_VERSION = "2022-11-28"
 
 # GitHub check-run conclusions considered failing. Other states such as
 # "success", "neutral" or "skipped" are ignored when gathering logs.
@@ -116,6 +117,7 @@ def _github_headers(token: str | None) -> dict[str, str]:
     headers = {
         "Accept": "application/vnd.github+json",
         "User-Agent": "f2clipboard",
+        "X-GitHub-Api-Version": GITHUB_API_VERSION,
     }
     token = token.strip() if token else None
     if token:
