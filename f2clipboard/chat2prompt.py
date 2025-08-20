@@ -14,11 +14,14 @@ def _extract_text(html_text: str) -> str:
     """Return plain text from HTML, preserving line breaks and bullet points."""
 
     def _replace_ordered(match: re.Match[str]) -> str:
+        outer = match.group(0)
         inner = match.group(1)
+        start_match = re.search(r"start=['\"]?(\d+)['\"]?", outer, flags=re.IGNORECASE)
+        start = int(start_match.group(1)) if start_match else 1
         items = re.findall(
             r"<li[^>]*>(.*?)</li[^>]*>", inner, flags=re.IGNORECASE | re.DOTALL
         )
-        numbered = [f"{i}. {item}" for i, item in enumerate(items, 1)]
+        numbered = [f"{i}. {item}" for i, item in enumerate(items, start)]
         return "\n" + "\n".join(numbered) + "\n"
 
     html_text = re.sub(
