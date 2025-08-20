@@ -265,6 +265,12 @@ Show the number of installed plugins:
 f2clipboard plugins --count
 ```
 
+Output the plugin count as JSON:
+
+```bash
+f2clipboard plugins --count --json
+```
+
 Show plugin versions:
 
 ```bash
