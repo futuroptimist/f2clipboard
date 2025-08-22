@@ -301,6 +301,26 @@ def test_plugins_command_json_filter(monkeypatch):
     assert result.stdout.strip() == '["zeta"]'
 
 
+def test_plugins_command_filter_ignore_case(monkeypatch):
+    _setup_two_plugins(monkeypatch)
+    runner = CliRunner()
+    result = runner.invoke(
+        f2clipboard.app, ["plugins", "--filter", "ALPHA", "--ignore-case"]
+    )
+    assert result.exit_code == 0
+    assert result.stdout.strip() == "alpha"
+
+
+def test_plugins_command_json_filter_ignore_case(monkeypatch):
+    _setup_two_plugins(monkeypatch)
+    runner = CliRunner()
+    result = runner.invoke(
+        f2clipboard.app, ["plugins", "--json", "--filter", "Z", "--ignore-case"]
+    )
+    assert result.exit_code == 0
+    assert result.stdout.strip() == '["zeta"]'
+
+
 def test_plugins_command_filter_no_match(monkeypatch):
     _setup_two_plugins(monkeypatch)
     runner = CliRunner()
