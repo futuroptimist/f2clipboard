@@ -1,8 +1,10 @@
 """Tests for plugin interface."""
 
 import importlib
+import json
 import sys
 from importlib.metadata import EntryPoint
+from pathlib import Path
 from types import ModuleType
 
 from typer.testing import CliRunner
@@ -61,6 +63,7 @@ def test_load_plugins_idempotent(monkeypatch):
     monkeypatch.setattr(f2clipboard, "entry_points", fake_entry_points)
     f2clipboard._loaded_plugins = []
     f2clipboard._plugin_versions = {}
+    f2clipboard._plugin_paths = {}
     f2clipboard._load_plugins()
     f2clipboard._load_plugins()
     assert f2clipboard._loaded_plugins == ["sample"]
@@ -80,6 +83,7 @@ def test_plugins_command_lists_plugins(monkeypatch):
     monkeypatch.setattr(f2clipboard, "entry_points", fake_entry_points)
     f2clipboard._loaded_plugins = []
     f2clipboard._plugin_versions = {}
+    f2clipboard._plugin_paths = {}
     f2clipboard._load_plugins()
     runner = CliRunner()
     result = runner.invoke(f2clipboard.app, ["plugins"])
@@ -101,6 +105,7 @@ def test_plugins_command_json_lists_plugins(monkeypatch):
     monkeypatch.setattr(f2clipboard, "entry_points", fake_entry_points)
     f2clipboard._loaded_plugins = []
     f2clipboard._plugin_versions = {}
+    f2clipboard._plugin_paths = {}
     f2clipboard._load_plugins()
     runner = CliRunner()
     result = runner.invoke(f2clipboard.app, ["plugins", "--json"])
@@ -113,6 +118,7 @@ def test_plugins_command_json_no_plugins(monkeypatch):
     monkeypatch.setattr(f2clipboard, "entry_points", lambda *a, **k: [])
     f2clipboard._loaded_plugins = []
     f2clipboard._plugin_versions = {}
+    f2clipboard._plugin_paths = {}
     f2clipboard._load_plugins()
     runner = CliRunner()
     result = runner.invoke(f2clipboard.app, ["plugins", "--json"])
@@ -134,6 +140,7 @@ def test_plugins_command_count(monkeypatch):
     monkeypatch.setattr(f2clipboard, "entry_points", fake_entry_points)
     f2clipboard._loaded_plugins = []
     f2clipboard._plugin_versions = {}
+    f2clipboard._plugin_paths = {}
     f2clipboard._load_plugins()
     runner = CliRunner()
     result = runner.invoke(f2clipboard.app, ["plugins", "--count"])
@@ -146,6 +153,7 @@ def test_plugins_command_count_no_plugins(monkeypatch):
     monkeypatch.setattr(f2clipboard, "entry_points", lambda *a, **k: [])
     f2clipboard._loaded_plugins = []
     f2clipboard._plugin_versions = {}
+    f2clipboard._plugin_paths = {}
     f2clipboard._load_plugins()
     runner = CliRunner()
     result = runner.invoke(f2clipboard.app, ["plugins", "--count"])
@@ -158,6 +166,7 @@ def test_plugins_command_count_json_no_plugins(monkeypatch):
     monkeypatch.setattr(f2clipboard, "entry_points", lambda *a, **k: [])
     f2clipboard._loaded_plugins = []
     f2clipboard._plugin_versions = {}
+    f2clipboard._plugin_paths = {}
     f2clipboard._load_plugins()
     runner = CliRunner()
     result = runner.invoke(f2clipboard.app, ["plugins", "--count", "--json"])
@@ -179,6 +188,7 @@ def test_plugins_command_versions(monkeypatch):
     monkeypatch.setattr(f2clipboard, "entry_points", fake_entry_points)
     f2clipboard._loaded_plugins = []
     f2clipboard._plugin_versions = {}
+    f2clipboard._plugin_paths = {}
     f2clipboard._load_plugins()
     runner = CliRunner()
     result = runner.invoke(f2clipboard.app, ["plugins", "--versions"])
@@ -200,6 +210,7 @@ def test_plugins_command_json_versions(monkeypatch):
     monkeypatch.setattr(f2clipboard, "entry_points", fake_entry_points)
     f2clipboard._loaded_plugins = []
     f2clipboard._plugin_versions = {}
+    f2clipboard._plugin_paths = {}
     f2clipboard._load_plugins()
     runner = CliRunner()
     result = runner.invoke(f2clipboard.app, ["plugins", "--versions", "--json"])
@@ -212,6 +223,7 @@ def test_plugins_command_versions_no_plugins(monkeypatch):
     monkeypatch.setattr(f2clipboard, "entry_points", lambda *a, **k: [])
     f2clipboard._loaded_plugins = []
     f2clipboard._plugin_versions = {}
+    f2clipboard._plugin_paths = {}
     f2clipboard._load_plugins()
     runner = CliRunner()
     result = runner.invoke(f2clipboard.app, ["plugins", "--versions"])
@@ -224,11 +236,71 @@ def test_plugins_command_json_versions_no_plugins(monkeypatch):
     monkeypatch.setattr(f2clipboard, "entry_points", lambda *a, **k: [])
     f2clipboard._loaded_plugins = []
     f2clipboard._plugin_versions = {}
+    f2clipboard._plugin_paths = {}
     f2clipboard._load_plugins()
     runner = CliRunner()
     result = runner.invoke(f2clipboard.app, ["plugins", "--versions", "--json"])
     assert result.exit_code == 0
     assert result.stdout.strip() == "{}"
+
+
+def test_plugins_command_paths(monkeypatch):
+    ep = EntryPoint(
+        name="sample", value="tests.test_plugins:plugin", group="f2clipboard.plugins"
+    )
+
+    def fake_entry_points(*args, **kwargs):
+        if kwargs.get("group") == "f2clipboard.plugins":
+            return [ep]
+        return []
+
+    importlib.reload(f2clipboard)
+    monkeypatch.setattr(f2clipboard, "entry_points", fake_entry_points)
+    f2clipboard._loaded_plugins = []
+    f2clipboard._plugin_versions = {}
+    f2clipboard._plugin_paths = {}
+    f2clipboard._load_plugins()
+    runner = CliRunner()
+    result = runner.invoke(f2clipboard.app, ["plugins", "--paths"])
+    assert result.exit_code == 0
+    assert "sample" in result.stdout
+    assert Path(__file__).name in result.stdout
+
+
+def test_plugins_command_json_paths(monkeypatch):
+    ep = EntryPoint(
+        name="sample", value="tests.test_plugins:plugin", group="f2clipboard.plugins"
+    )
+
+    def fake_entry_points(*args, **kwargs):
+        if kwargs.get("group") == "f2clipboard.plugins":
+            return [ep]
+        return []
+
+    importlib.reload(f2clipboard)
+    monkeypatch.setattr(f2clipboard, "entry_points", fake_entry_points)
+    f2clipboard._loaded_plugins = []
+    f2clipboard._plugin_versions = {}
+    f2clipboard._plugin_paths = {}
+    f2clipboard._load_plugins()
+    runner = CliRunner()
+    result = runner.invoke(f2clipboard.app, ["plugins", "--paths", "--json"])
+    assert result.exit_code == 0
+    expected = {"sample": str(Path(__file__).resolve())}
+    assert json.loads(result.stdout) == expected
+
+
+def test_plugins_command_paths_no_plugins(monkeypatch):
+    importlib.reload(f2clipboard)
+    monkeypatch.setattr(f2clipboard, "entry_points", lambda *a, **k: [])
+    f2clipboard._loaded_plugins = []
+    f2clipboard._plugin_versions = {}
+    f2clipboard._plugin_paths = {}
+    f2clipboard._load_plugins()
+    runner = CliRunner()
+    result = runner.invoke(f2clipboard.app, ["plugins", "--paths"])
+    assert result.exit_code == 0
+    assert "No plugins installed" in result.stdout
 
 
 def _setup_two_plugins(monkeypatch):
@@ -248,6 +320,7 @@ def _setup_two_plugins(monkeypatch):
     monkeypatch.setattr(f2clipboard, "entry_points", fake_entry_points)
     f2clipboard._loaded_plugins = []
     f2clipboard._plugin_versions = {}
+    f2clipboard._plugin_paths = {}
     f2clipboard._load_plugins()
 
 

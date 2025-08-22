@@ -1,3 +1,4 @@
+import inspect
 import json
 import logging
 from importlib.metadata import PackageNotFoundError, entry_points, version
@@ -21,6 +22,7 @@ app.command("files")(files_command)
 
 _loaded_plugins: list[str] = []
 _plugin_versions: dict[str, str] = {}
+_plugin_paths: dict[str, str] = {}
 
 
 @app.command("plugins")
@@ -32,6 +34,7 @@ def plugins_command(
         False, "--count", help="Print the number of installed plugins."
     ),
     versions: bool = typer.Option(False, "--versions", help="Show plugin versions."),
+    paths: bool = typer.Option(False, "--paths", help="Show plugin source file paths."),
     sort: bool = typer.Option(
         False, "--sort", help="Sort plugin names alphabetically."
     ),
@@ -39,7 +42,7 @@ def plugins_command(
         None, "--filter", help="Only include plugin names containing this substring."
     ),
 ) -> None:
-    """List registered plugin names, counts or versions."""
+    """List registered plugin names, counts, versions or paths."""
 
     # No plugins loaded at all: mirror existing behavior
     if not _loaded_plugins:
@@ -49,7 +52,7 @@ def plugins_command(
         elif count:
             typer.echo("0")
         elif json_output:
-            typer.echo("{}" if versions else "[]")
+            typer.echo("{}" if (versions or paths) else "[]")
         else:
             typer.echo("No plugins installed")
         return
@@ -66,7 +69,7 @@ def plugins_command(
         elif count:
             typer.echo("0")
         elif json_output:
-            typer.echo("{}" if versions else "[]")
+            typer.echo("{}" if (versions or paths) else "[]")
         else:
             typer.echo("No plugins installed")
         return
@@ -80,14 +83,34 @@ def plugins_command(
     elif count:
         typer.echo(str(len(names)))
     elif json_output:
-        if versions:
+        if versions and paths:
+            data = {
+                name: {
+                    "version": _plugin_versions.get(name, "unknown"),
+                    "path": _plugin_paths.get(name, "unknown"),
+                }
+                for name in names
+            }
+            typer.echo(json.dumps(data))
+        elif versions:
             data = {name: _plugin_versions.get(name, "unknown") for name in names}
+            typer.echo(json.dumps(data))
+        elif paths:
+            data = {name: _plugin_paths.get(name, "unknown") for name in names}
             typer.echo(json.dumps(data))
         else:
             typer.echo(json.dumps(names))
+    elif versions and paths:
+        for name in names:
+            typer.echo(
+                f"{name} {_plugin_versions.get(name, 'unknown')} {_plugin_paths.get(name, 'unknown')}"
+            )
     elif versions:
         for name in names:
             typer.echo(f"{name} {_plugin_versions.get(name, 'unknown')}")
+    elif paths:
+        for name in names:
+            typer.echo(f"{name} {_plugin_paths.get(name, 'unknown')}")
     else:
         for name in names:
             typer.echo(name)
@@ -126,6 +149,10 @@ def _load_plugins() -> None:
             _loaded_plugins.append(ep.name)
             dist = getattr(ep, "dist", None)
             _plugin_versions[ep.name] = getattr(dist, "version", "unknown")
+            try:
+                _plugin_paths[ep.name] = inspect.getfile(plugin)
+            except TypeError:  # pragma: no cover - built-in or C extension
+                _plugin_paths[ep.name] = "unknown"
         except Exception as exc:  # pragma: no cover - defensive
             logging.getLogger(__name__).warning(
                 "Failed to load plugin %s: %s", ep.name, exc
