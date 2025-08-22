@@ -90,6 +90,7 @@ f2clipboard files --dir path/to/project
 - [x] Non-interactive mode for `files` command to select all matches via `--all`. 💯
 - [x] Plugin count via `plugins --count`. 💯
 - [x] Show plugin versions via `plugins --versions`. 💯
+- [x] Show plugin file paths via `plugins --paths`. 💯
 - [x] Include additional file patterns in `files` command via `--include`. 💯
 - [x] Sort plugin names via `plugins --sort`. 💯
 - [x] Filter plugin names via `plugins --filter`. 💯
@@ -292,6 +293,18 @@ Output versions as JSON:
 
 ```bash
 f2clipboard plugins --versions --json
+```
+
+Show plugin source paths:
+
+```bash
+f2clipboard plugins --paths
+```
+
+Output paths as JSON:
+
+```bash
+f2clipboard plugins --paths --json
 ```
 
 The first bundled plugin summarises Jira issues:
