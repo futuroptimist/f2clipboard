@@ -169,11 +169,13 @@ async def _process_task(url: str, settings: Settings) -> str:
             if len(log_text.encode()) > settings.log_size_threshold:
                 summary = await summarise_log(log_text, settings)
                 snippet = "\n".join(log_text.splitlines()[:100])
-                log_text = (
+                rendered = (
                     f"{summary}\n\n<details>\n<summary>First 100 lines</summary>\n\n"
                     f"```text\n{snippet}\n```\n</details>"
                 )
-            sections.append(f"### {run['name']}\n\n```text\n{log_text}\n```")
+            else:
+                rendered = f"```text\n{log_text}\n```"
+            sections.append(f"### {run['name']}\n\n{rendered}")
 
     return "\n\n".join(sections) or "No failing checks"
 

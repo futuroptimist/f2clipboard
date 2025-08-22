@@ -170,7 +170,7 @@ def test_process_task_summarises_large_log(monkeypatch):
         return [{"id": 1, "name": "Job", "conclusion": "failure"}]
 
     async def fake_log(client, owner, repo, run_id):
-        return "log line\n" * 200  # large
+        return "\n".join(f"line {i}" for i in range(1, 201))  # large
 
     async def fake_summary(text: str, settings: Settings) -> str:
         return "SUMMARY"
@@ -183,8 +183,10 @@ def test_process_task_summarises_large_log(monkeypatch):
     settings = Settings()
     settings.log_size_threshold = 100
     result = asyncio.run(_process_task("http://task", settings))
-    assert "SUMMARY" in result
-    assert "<details>" in result
+    assert "SUMMARY\n\n<details>" in result
+    assert "line 1" in result
+    assert "line 100" in result
+    assert "line 101" not in result
 
 
 def test_process_task_small_log_skips_summarise(monkeypatch):
