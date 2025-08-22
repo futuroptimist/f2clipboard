@@ -38,6 +38,9 @@ def plugins_command(
     filter_: str | None = typer.Option(
         None, "--filter", help="Only include plugin names containing this substring."
     ),
+    ignore_case: bool = typer.Option(
+        False, "--ignore-case", help="Filter plugin names case-insensitively."
+    ),
 ) -> None:
     """List registered plugin names, counts or versions."""
 
@@ -57,7 +60,11 @@ def plugins_command(
     # Start from loaded plugins, then apply filter & sort deterministically
     names = list(_loaded_plugins)
     if filter_:
-        names = [name for name in names if filter_ in name]
+        if ignore_case:
+            needle = filter_.lower()
+            names = [name for name in names if needle in name.lower()]
+        else:
+            names = [name for name in names if filter_ in name]
 
     # If filter removes everything, mirror empty behavior again
     if not names:

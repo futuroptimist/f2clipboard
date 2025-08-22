@@ -254,10 +254,10 @@ Sort them alphabetically:
 f2clipboard plugins --sort
 ```
 
-Filter by substring:
+Filter by substring (case-insensitive with `--ignore-case`):
 
 ```bash
-f2clipboard plugins --filter jira
+f2clipboard plugins --filter jira --ignore-case
 ```
 
 Output as JSON:
