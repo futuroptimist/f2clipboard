@@ -15,6 +15,7 @@ class Settings(BaseSettings):
         default="claude-3-haiku-20240307", alias="ANTHROPIC_MODEL"
     )
     codex_cookie: str | None = Field(default=None, alias="CODEX_COOKIE")
+    # Size in bytes above which logs are summarised instead of included verbatim.
     log_size_threshold: int = Field(
         default=150_000,
         ge=0,

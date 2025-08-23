@@ -167,6 +167,10 @@ async def _process_task(url: str, settings: Settings) -> str:
             log_text = await _download_log(client, owner, repo, run["id"])
             log_text = redact_secrets(log_text)
             if len(log_text.encode()) > settings.log_size_threshold:
+                # For oversized logs, delegate to the configured LLM to produce a concise
+                # summary and only retain a short snippet of the original output for
+                # context. This keeps the resulting Markdown manageable while still
+                # exposing the most relevant lines.
                 summary = await summarise_log(log_text, settings)
                 snippet = "\n".join(log_text.splitlines()[:100])
                 rendered = (
