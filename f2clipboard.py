@@ -94,8 +94,15 @@ def expand_pattern(pattern):
     return [f"{prefix}{opt}{suffix}" for opt in options]
 
 
-def list_files(directory, pattern="*", include_patterns=None, ignore_patterns=[]):
-    """Recursively list files in a directory matching any of the patterns, skipping ignored and binary/image files."""
+def list_files(
+    directory,
+    pattern="*",
+    include_patterns=None,
+    ignore_patterns=[],
+    max_size=None,
+):
+    """Recursively list files in a directory matching any of the patterns, skipping ignored,
+    binary/image files, and files larger than ``max_size`` bytes."""
     # Expand brace patterns into multiple patterns
     patterns = expand_pattern(pattern)
     if include_patterns:
@@ -125,6 +132,9 @@ def list_files(directory, pattern="*", include_patterns=None, ignore_patterns=[]
 
             # Skip binary/image files
             if is_binary_or_image_file(basename):
+                continue
+
+            if max_size is not None and os.path.getsize(filename) > max_size:
                 continue
 
             # Match if the file matches any of the expanded patterns
@@ -276,6 +286,11 @@ def build_parser():
         "--output",
         help="Write formatted Markdown to a file instead of copying to clipboard",
     )
+    parser.add_argument(
+        "--max-size",
+        type=int,
+        help="Skip files larger than this size in bytes",
+    )
     return parser
 
 
@@ -293,6 +308,7 @@ def main(argv=None):
             pattern=pattern,
             include_patterns=args.include,
             ignore_patterns=ignore_patterns,
+            max_size=args.max_size,
         )
     )
     if args.all:
