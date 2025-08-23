@@ -23,6 +23,11 @@ def files_command(
         "--exclude",
         help="Additional glob patterns to ignore (can be used multiple times)",
     ),
+    max_size: int | None = typer.Option(
+        None,
+        "--max-size",
+        help="Skip files larger than this size in bytes",
+    ),
     dry_run: bool = typer.Option(
         False, "--dry-run", help="Print Markdown instead of copying to clipboard"
     ),
@@ -53,6 +58,8 @@ def files_command(
         argv.extend(["--include", pat])
     for pat in exclude:
         argv.extend(["--exclude", pat])
+    if max_size is not None:
+        argv.extend(["--max-size", str(max_size)])
     if dry_run:
         argv.append("--dry-run")
     if select_all:
