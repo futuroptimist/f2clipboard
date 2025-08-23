@@ -95,6 +95,7 @@ f2clipboard files --dir path/to/project
 - [x] Sort plugin names via `plugins --sort`. 💯
 - [x] Reverse plugin names via `plugins --reverse`. 💯
 - [x] Filter plugin names via `plugins --filter`. 💯
+- [x] Skip files larger than a threshold via `--max-size`. 💯
 
 ## Getting Started
 
@@ -194,6 +195,12 @@ Preview output without copying to the clipboard:
 
 ```bash
 f2clipboard files --dir path/to/project --dry-run
+```
+
+Skip files larger than a given number of bytes:
+
+```bash
+f2clipboard files --dir path/to/project --max-size 1000
 ```
 
 Save output to a Markdown file:
