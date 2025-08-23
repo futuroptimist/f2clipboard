@@ -163,6 +163,8 @@ def test_download_log_handles_gzip():
 
 
 def test_process_task_summarises_large_log(monkeypatch):
+    """Oversized logs should be summarised with the first lines preserved."""
+
     async def fake_html(url: str, cookie: str | None = None) -> str:
         return '<a href="https://github.com/o/r/pull/1">PR</a>'
 
