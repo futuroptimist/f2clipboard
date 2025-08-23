@@ -93,6 +93,7 @@ f2clipboard files --dir path/to/project
 - [x] Show plugin file paths via `plugins --paths`. 💯
 - [x] Include additional file patterns in `files` command via `--include`. 💯
 - [x] Sort plugin names via `plugins --sort`. 💯
+- [x] Reverse plugin names via `plugins --reverse`. 💯
 - [x] Filter plugin names via `plugins --filter`. 💯
 
 ## Getting Started
@@ -253,6 +254,18 @@ Sort them alphabetically:
 
 ```bash
 f2clipboard plugins --sort
+```
+
+Reverse the order of plugins:
+
+```bash
+f2clipboard plugins --reverse
+```
+
+Sort descending:
+
+```bash
+f2clipboard plugins --sort --reverse
 ```
 
 Filter by substring (case-insensitive with `--ignore-case`):

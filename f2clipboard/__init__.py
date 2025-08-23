@@ -38,6 +38,7 @@ def plugins_command(
     sort: bool = typer.Option(
         False, "--sort", help="Sort plugin names alphabetically."
     ),
+    reverse: bool = typer.Option(False, "--reverse", help="Reverse plugin order."),
     filter_: str | None = typer.Option(
         None, "--filter", help="Only include plugin names containing this substring."
     ),
@@ -85,6 +86,9 @@ def plugins_command(
 
     if sort:
         names = sorted(names)
+
+    if reverse:
+        names = list(reversed(names))
 
     # Counts should reflect the (possibly filtered) list.
     if count and json_output:
