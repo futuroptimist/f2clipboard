@@ -4,6 +4,7 @@ import gzip
 import pytest
 
 from f2clipboard.codex_task import (
+    SUMMARY_HEAD_LINES,
     _decode_log,
     _download_log,
     _extract_pr_url,
@@ -185,8 +186,8 @@ def test_process_task_summarises_large_log(monkeypatch):
     result = asyncio.run(_process_task("http://task", settings))
     assert "SUMMARY\n\n<details>" in result
     assert "line 1" in result
-    assert "line 100" in result
-    assert "line 101" not in result
+    assert f"line {SUMMARY_HEAD_LINES}" in result
+    assert f"line {SUMMARY_HEAD_LINES + 1}" not in result
 
 
 def test_process_task_small_log_skips_summarise(monkeypatch):

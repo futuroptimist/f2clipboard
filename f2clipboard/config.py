@@ -19,7 +19,7 @@ class Settings(BaseSettings):
         default=150_000,
         ge=0,
         alias="LOG_SIZE_THRESHOLD",
-        description="Summarise logs larger than this many bytes",
+        description=("Summarise logs larger than this many bytes; set 0 to disable"),
     )
 
     class Config:

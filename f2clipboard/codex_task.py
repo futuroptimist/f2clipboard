@@ -27,6 +27,9 @@ GITHUB_API_VERSION = "2022-11-28"
 # "success", "neutral" or "skipped" are ignored when gathering logs.
 FAIL_CONCLUSIONS = {"failure", "timed_out", "cancelled", "action_required"}
 
+# Number of leading log lines to include when summarising oversized logs
+SUMMARY_HEAD_LINES = 100
+
 
 async def _fetch_task_html(url: str, cookie: str | None = None) -> str:
     """Fetch raw HTML for a Codex task page.
@@ -168,9 +171,9 @@ async def _process_task(url: str, settings: Settings) -> str:
             log_text = redact_secrets(log_text)
             if len(log_text.encode()) > settings.log_size_threshold:
                 summary = await summarise_log(log_text, settings)
-                snippet = "\n".join(log_text.splitlines()[:100])
+                snippet = "\n".join(log_text.splitlines()[:SUMMARY_HEAD_LINES])
                 rendered = (
-                    f"{summary}\n\n<details>\n<summary>First 100 lines</summary>\n\n"
+                    f"{summary}\n\n<details>\n<summary>First {SUMMARY_HEAD_LINES} lines</summary>\n\n"
                     f"```text\n{snippet}\n```\n</details>"
                 )
             else:
