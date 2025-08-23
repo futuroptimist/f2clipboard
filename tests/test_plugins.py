@@ -402,6 +402,22 @@ def test_plugins_command_versions_json_sort(monkeypatch):
     assert result.stdout.strip() == '{"alpha": "unknown", "zeta": "unknown"}'
 
 
+def test_plugins_command_reverse(monkeypatch):
+    _setup_two_plugins(monkeypatch)
+    runner = CliRunner()
+    result = runner.invoke(f2clipboard.app, ["plugins", "--reverse"])
+    assert result.exit_code == 0
+    assert result.stdout.strip().splitlines() == ["alpha", "zeta"]
+
+
+def test_plugins_command_sort_reverse(monkeypatch):
+    _setup_two_plugins(monkeypatch)
+    runner = CliRunner()
+    result = runner.invoke(f2clipboard.app, ["plugins", "--sort", "--reverse"])
+    assert result.exit_code == 0
+    assert result.stdout.strip().splitlines() == ["zeta", "alpha"]
+
+
 def test_plugins_command_filter(monkeypatch):
     _setup_two_plugins(monkeypatch)
     runner = CliRunner()

@@ -5,6 +5,7 @@ import pyperclip
 import pytest
 
 from f2clipboard.codex_task import (
+    SUMMARY_HEAD_LINES,
     _decode_log,
     _download_log,
     _extract_pr_url,
@@ -164,6 +165,8 @@ def test_download_log_handles_gzip():
 
 
 def test_process_task_summarises_large_log(monkeypatch):
+    """Oversized logs should be summarised with the first lines preserved."""
+
     async def fake_html(url: str, cookie: str | None = None) -> str:
         return '<a href="https://github.com/o/r/pull/1">PR</a>'
 
@@ -186,8 +189,8 @@ def test_process_task_summarises_large_log(monkeypatch):
     result = asyncio.run(_process_task("http://task", settings))
     assert "SUMMARY\n\n<details>" in result
     assert "line 1" in result
-    assert "line 100" in result
-    assert "line 101" not in result
+    assert f"line {SUMMARY_HEAD_LINES}" in result
+    assert f"line {SUMMARY_HEAD_LINES + 1}" not in result
 
 
 def test_process_task_small_log_skips_summarise(monkeypatch):
@@ -277,16 +280,16 @@ def test_codex_task_command_skips_clipboard(monkeypatch, capsys):
     assert not copied
 
 
-def test_codex_task_command_warns_on_clipboard_failure(monkeypatch, capsys):
+def test_codex_task_command_warns_on_clipboard_error(monkeypatch, capsys):
     async def fake_process(url: str, settings: Settings) -> str:
         return "MD"
-
-    monkeypatch.setattr("f2clipboard.codex_task._process_task", fake_process)
 
     def fake_copy(text: str) -> None:
         raise pyperclip.PyperclipException("no clipboard")
 
+    monkeypatch.setattr("f2clipboard.codex_task._process_task", fake_process)
     monkeypatch.setattr("f2clipboard.codex_task.pyperclip.copy", fake_copy)
+
     codex_task_command("http://task")
     out, err = capsys.readouterr()
     assert "MD" in out

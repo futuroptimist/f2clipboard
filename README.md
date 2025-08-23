@@ -93,7 +93,9 @@ f2clipboard files --dir path/to/project
 - [x] Show plugin file paths via `plugins --paths`. 💯
 - [x] Include additional file patterns in `files` command via `--include`. 💯
 - [x] Sort plugin names via `plugins --sort`. 💯
+- [x] Reverse plugin names via `plugins --reverse`. 💯
 - [x] Filter plugin names via `plugins --filter`. 💯
+- [x] Skip files larger than a threshold via `--max-size`. 💯
 
 ## Getting Started
 
@@ -117,6 +119,12 @@ pbpaste | head  # macOS; use `xclip -o -selection clipboard` on Linux
 ```
 
 The resulting Markdown is printed to your terminal and copied to the clipboard.
+Paste it:
+
+```bash
+pbpaste  # macOS
+# xclip -o -selection clipboard  # Linux
+```
 For a list of available options, run ``f2clipboard codex-task --help``.
 To skip copying to the clipboard, pass ``--no-clipboard``:
 
@@ -196,6 +204,12 @@ Preview output without copying to the clipboard:
 f2clipboard files --dir path/to/project --dry-run
 ```
 
+Skip files larger than a given number of bytes:
+
+```bash
+f2clipboard files --dir path/to/project --max-size 1000
+```
+
 Save output to a Markdown file:
 
 ```bash
@@ -254,6 +268,18 @@ Sort them alphabetically:
 
 ```bash
 f2clipboard plugins --sort
+```
+
+Reverse the order of plugins:
+
+```bash
+f2clipboard plugins --reverse
+```
+
+Sort descending:
+
+```bash
+f2clipboard plugins --sort --reverse
 ```
 
 Filter by substring (case-insensitive with `--ignore-case`):
