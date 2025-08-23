@@ -229,5 +229,11 @@ def codex_task_command(
         try:
             pyperclip.copy(result)
         except pyperclip.PyperclipException as exc:
-            typer.echo(f"Warning: failed to copy to clipboard: {exc}", err=True)
+            import warnings
+
+            warnings.warn(
+                f"Could not copy to clipboard: {exc}",
+                RuntimeWarning,
+                stacklevel=1,
+            )
     typer.echo(result)

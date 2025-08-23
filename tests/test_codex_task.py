@@ -280,19 +280,20 @@ def test_codex_task_command_skips_clipboard(monkeypatch, capsys):
     assert not copied
 
 
-def test_codex_task_command_warns_on_clipboard_error(monkeypatch, capsys):
+def test_codex_task_command_warns_on_missing_clipboard(monkeypatch, capsys):
     async def fake_process(url: str, settings: Settings) -> str:
         return "MD"
 
-    def fake_copy(text: str) -> None:
-        raise pyperclip.PyperclipException("no clipboard")
-
     monkeypatch.setattr("f2clipboard.codex_task._process_task", fake_process)
+
+    def fake_copy(text: str) -> None:
+        raise pyperclip.PyperclipException("no xclip")
+
     monkeypatch.setattr("f2clipboard.codex_task.pyperclip.copy", fake_copy)
-    codex_task_command("http://task")
-    captured = capsys.readouterr()
-    assert "MD" in captured.out
-    assert "Warning" in captured.err
+    with pytest.warns(RuntimeWarning, match="clipboard"):
+        codex_task_command("http://task")
+    out = capsys.readouterr().out
+    assert "MD" in out
 
 
 def test_codex_task_command_overrides_threshold(monkeypatch, capsys):
