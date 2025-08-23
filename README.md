@@ -118,6 +118,12 @@ f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123
 ```
 
 The resulting Markdown is printed to your terminal and copied to the clipboard.
+Paste it:
+
+```bash
+pbpaste  # macOS
+# xclip -o -selection clipboard  # Linux
+```
 For a list of available options, run ``f2clipboard codex-task --help``.
 To skip copying to the clipboard, pass ``--no-clipboard``:
 
