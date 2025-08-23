@@ -7,8 +7,8 @@ import gzip
 import re
 from typing import Annotated, Any
 
-import clipboard
 import httpx
+import pyperclip
 import typer
 
 from .config import Settings
@@ -219,5 +219,14 @@ def codex_task_command(
     settings = Settings(**settings_kwargs) if settings_kwargs else Settings()
     result = asyncio.run(_process_task(url, settings))
     if copy_to_clipboard:
-        clipboard.copy(result)
+        try:
+            pyperclip.copy(result)
+        except (
+            pyperclip.PyperclipException
+        ) as exc:  # pragma: no cover - depends on system
+            typer.secho(
+                f"Warning: failed to copy to clipboard: {exc}",
+                fg=typer.colors.YELLOW,
+                err=True,
+            )
     typer.echo(result)

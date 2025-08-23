@@ -109,10 +109,13 @@ cp .env.example .env  # fill in your tokens
 # Set CODEX_COOKIE to access private Codex tasks
 ```
 
-Generate a Markdown snippet for a Codex task:
+Generate a Markdown snippet for a Codex task and paste it from your clipboard:
 
 ```bash
 f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123
+pbpaste  # macOS
+# or
+xclip -o -selection clipboard  # Linux
 ```
 
 The resulting Markdown is printed to your terminal and copied to the clipboard.
