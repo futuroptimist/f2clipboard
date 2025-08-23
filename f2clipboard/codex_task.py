@@ -27,6 +27,9 @@ GITHUB_API_VERSION = "2022-11-28"
 # "success", "neutral" or "skipped" are ignored when gathering logs.
 FAIL_CONCLUSIONS = {"failure", "timed_out", "cancelled", "action_required"}
 
+# Number of leading log lines to include when summarising oversized logs
+SUMMARY_HEAD_LINES = 100
+
 
 async def _fetch_task_html(url: str, cookie: str | None = None) -> str:
     """Fetch raw HTML for a Codex task page.
@@ -167,10 +170,14 @@ async def _process_task(url: str, settings: Settings) -> str:
             log_text = await _download_log(client, owner, repo, run["id"])
             log_text = redact_secrets(log_text)
             if len(log_text.encode()) > settings.log_size_threshold:
+                # For oversized logs, delegate to the configured LLM to produce a concise
+                # summary and only retain a short snippet of the original output for
+                # context. This keeps the resulting Markdown manageable while still
+                # exposing the most relevant lines.
                 summary = await summarise_log(log_text, settings)
-                snippet = "\n".join(log_text.splitlines()[:100])
+                snippet = "\n".join(log_text.splitlines()[:SUMMARY_HEAD_LINES])
                 rendered = (
-                    f"{summary}\n\n<details>\n<summary>First 100 lines</summary>\n\n"
+                    f"{summary}\n\n<details>\n<summary>First {SUMMARY_HEAD_LINES} lines</summary>\n\n"
                     f"```text\n{snippet}\n```\n</details>"
                 )
             else:
@@ -221,9 +228,7 @@ def codex_task_command(
     if copy_to_clipboard:
         try:
             pyperclip.copy(result)
-        except (
-            pyperclip.PyperclipException
-        ) as exc:  # pragma: no cover - depends on system
+        except pyperclip.PyperclipException as exc:  # pragma: no cover - depends on system
             typer.secho(
                 f"Warning: failed to copy to clipboard: {exc}",
                 fg=typer.colors.YELLOW,
