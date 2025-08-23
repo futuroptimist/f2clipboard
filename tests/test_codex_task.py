@@ -1,6 +1,7 @@
 import asyncio
 import gzip
 
+import pyperclip
 import pytest
 
 from f2clipboard.codex_task import (
@@ -252,7 +253,7 @@ def test_codex_task_command_copies_to_clipboard(monkeypatch, capsys):
     def fake_copy(text: str) -> None:
         copied["text"] = text
 
-    monkeypatch.setattr("f2clipboard.codex_task.clipboard.copy", fake_copy)
+    monkeypatch.setattr("f2clipboard.codex_task.pyperclip.copy", fake_copy)
     codex_task_command("http://task")
     out = capsys.readouterr().out
     assert "MD" in out
@@ -269,11 +270,27 @@ def test_codex_task_command_skips_clipboard(monkeypatch, capsys):
     def fake_copy(text: str) -> None:
         copied["text"] = text
 
-    monkeypatch.setattr("f2clipboard.codex_task.clipboard.copy", fake_copy)
+    monkeypatch.setattr("f2clipboard.codex_task.pyperclip.copy", fake_copy)
     codex_task_command("http://task", copy_to_clipboard=False)
     out = capsys.readouterr().out
     assert "MD" in out
     assert not copied
+
+
+def test_codex_task_command_warns_on_clipboard_failure(monkeypatch, capsys):
+    async def fake_process(url: str, settings: Settings) -> str:
+        return "MD"
+
+    monkeypatch.setattr("f2clipboard.codex_task._process_task", fake_process)
+
+    def fake_copy(text: str) -> None:
+        raise pyperclip.PyperclipException("no clipboard")
+
+    monkeypatch.setattr("f2clipboard.codex_task.pyperclip.copy", fake_copy)
+    codex_task_command("http://task")
+    out, err = capsys.readouterr()
+    assert "MD" in out
+    assert "clipboard" in err.lower()
 
 
 def test_codex_task_command_overrides_threshold(monkeypatch, capsys):
