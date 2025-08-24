@@ -1,7 +1,7 @@
 """Application settings loaded from environment variables."""
 
 from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -23,6 +23,4 @@ class Settings(BaseSettings):
         description=("Summarise logs larger than this many bytes; set 0 to disable"),
     )
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
