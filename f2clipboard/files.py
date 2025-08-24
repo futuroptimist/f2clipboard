@@ -41,6 +41,9 @@ def files_command(
     ),
 ) -> None:
     """Invoke the legacy script to copy selected files to the clipboard."""
+    if max_size is not None and max_size <= 0:
+        raise typer.BadParameter("max-size must be positive")
+
     script_path = Path(__file__).resolve().parent.parent / "f2clipboard.py"
     if not script_path.exists():
         typer.echo("Legacy script not found: f2clipboard.py", err=True)
