@@ -98,7 +98,7 @@ def list_files(
     directory,
     pattern="*",
     include_patterns=None,
-    ignore_patterns=[],
+    ignore_patterns=None,
     max_size=None,
 ):
     """Recursively list files in a directory matching any of the patterns, skipping ignored,
@@ -109,6 +109,10 @@ def list_files(
         for pat in include_patterns:
             patterns.extend(expand_pattern(pat))
 
+    normalized_ignore = (
+        [p.rstrip("/\\") for p in ignore_patterns] if ignore_patterns else []
+    )
+
     for root, dirs, files in os.walk(directory):
         # Skip directories in ignore patterns
         dirs[:] = [
@@ -116,7 +120,7 @@ def list_files(
             for d in dirs
             if not any(
                 fnmatch.fnmatch(os.path.join(root, d), os.path.join(root, pat))
-                for pat in ignore_patterns
+                for pat in normalized_ignore
             )
         ]
 
@@ -126,7 +130,7 @@ def list_files(
             # Skip files that match ignore patterns
             if any(
                 fnmatch.fnmatch(filename, os.path.join(root, pat))
-                for pat in ignore_patterns
+                for pat in normalized_ignore
             ):
                 continue
 
