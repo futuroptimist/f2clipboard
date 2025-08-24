@@ -246,6 +246,7 @@ Run `f2clipboard` inside GitHub Actions using the bundled composite action:
 ```
 
 Pass any CLI arguments via `args`; the default is `--help`.
+See [docs/github-action.md](docs/github-action.md) for authentication options and more details.
 
 ## Plugins
 
