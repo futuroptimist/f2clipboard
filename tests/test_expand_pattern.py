@@ -14,3 +14,7 @@ def test_expand_pattern_strips_whitespace():
 
 def test_expand_pattern_no_braces():
     assert module.expand_pattern("*.py") == ["*.py"]
+
+
+def test_expand_pattern_ignores_empty_entries():
+    assert module.expand_pattern("*.{py,}") == ["*.py"]
