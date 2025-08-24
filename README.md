@@ -210,6 +210,8 @@ Skip files larger than a given number of bytes:
 f2clipboard files --dir path/to/project --max-size 1000
 ```
 
+`--max-size` must be a positive integer.
+
 Save output to a Markdown file:
 
 ```bash

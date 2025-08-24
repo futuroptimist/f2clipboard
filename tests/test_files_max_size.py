@@ -2,6 +2,8 @@ import importlib.util
 import types
 from pathlib import Path
 
+import pytest
+import typer
 from typer.testing import CliRunner
 
 from f2clipboard import app
@@ -52,6 +54,11 @@ def test_files_command_forwards_max_size(monkeypatch, tmp_path):
         "--max-size",
         "5",
     ]
+
+
+def test_files_command_max_size_must_be_positive():
+    with pytest.raises(typer.BadParameter):
+        files_module.files_command(max_size=0)
 
 
 def test_legacy_main_max_size(tmp_path, capsys):
