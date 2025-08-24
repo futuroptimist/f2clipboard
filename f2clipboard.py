@@ -90,6 +90,7 @@ def expand_pattern(pattern):
     options = [
         opt.strip()
         for opt in pattern[pattern.find("{") + 1 : pattern.find("}")].split(",")
+        if opt.strip()
     ]
     return [f"{prefix}{opt}{suffix}" for opt in options]
 
