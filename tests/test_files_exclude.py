@@ -29,6 +29,15 @@ def test_list_files_respects_exclude(tmp_path):
     assert str(tmp_path / "b.py") not in files
 
 
+def test_list_files_skips_directory_with_trailing_slash(tmp_path):
+    ignored = tmp_path / "ignored"
+    ignored.mkdir()
+    (ignored / "file.txt").write_text("data")
+    legacy = _load_legacy_module()
+    files = list(legacy.list_files(str(tmp_path), ignore_patterns=["ignored/"]))
+    assert files == []
+
+
 def test_files_command_forwards_exclude(monkeypatch, tmp_path):
     called = {}
 
