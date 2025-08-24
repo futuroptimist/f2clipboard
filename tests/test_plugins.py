@@ -7,6 +7,7 @@ from importlib.metadata import EntryPoint
 from pathlib import Path
 from types import ModuleType
 
+import yaml
 from typer.testing import CliRunner
 
 import f2clipboard
@@ -113,6 +114,28 @@ def test_plugins_command_json_lists_plugins(monkeypatch):
     assert result.stdout.strip() == '["sample"]'
 
 
+def test_plugins_command_yaml_lists_plugins(monkeypatch):
+    ep = EntryPoint(
+        name="sample", value="tests.test_plugins:plugin", group="f2clipboard.plugins"
+    )
+
+    def fake_entry_points(*args, **kwargs):
+        if kwargs.get("group") == "f2clipboard.plugins":
+            return [ep]
+        return []
+
+    importlib.reload(f2clipboard)
+    monkeypatch.setattr(f2clipboard, "entry_points", fake_entry_points)
+    f2clipboard._loaded_plugins = []
+    f2clipboard._plugin_versions = {}
+    f2clipboard._plugin_paths = {}
+    f2clipboard._load_plugins()
+    runner = CliRunner()
+    result = runner.invoke(f2clipboard.app, ["plugins", "--yaml"])
+    assert result.exit_code == 0
+    assert yaml.safe_load(result.stdout) == ["sample"]
+
+
 def test_plugins_command_json_no_plugins(monkeypatch):
     importlib.reload(f2clipboard)
     monkeypatch.setattr(f2clipboard, "entry_points", lambda *a, **k: [])
@@ -124,6 +147,19 @@ def test_plugins_command_json_no_plugins(monkeypatch):
     result = runner.invoke(f2clipboard.app, ["plugins", "--json"])
     assert result.exit_code == 0
     assert result.stdout.strip() == "[]"
+
+
+def test_plugins_command_yaml_no_plugins(monkeypatch):
+    importlib.reload(f2clipboard)
+    monkeypatch.setattr(f2clipboard, "entry_points", lambda *a, **k: [])
+    f2clipboard._loaded_plugins = []
+    f2clipboard._plugin_versions = {}
+    f2clipboard._plugin_paths = {}
+    f2clipboard._load_plugins()
+    runner = CliRunner()
+    result = runner.invoke(f2clipboard.app, ["plugins", "--yaml"])
+    assert result.exit_code == 0
+    assert yaml.safe_load(result.stdout) == []
 
 
 def test_plugins_command_count(monkeypatch):
@@ -193,6 +229,29 @@ def test_plugins_command_count_json(monkeypatch):
     result = runner.invoke(f2clipboard.app, ["plugins", "--count", "--json"])
     assert result.exit_code == 0
     assert result.stdout.strip() == '{"count": 1, "plugins": ["sample"]}'
+
+
+def test_plugins_command_count_yaml(monkeypatch):
+    ep = EntryPoint(
+        name="sample", value="tests.test_plugins:plugin", group="f2clipboard.plugins"
+    )
+
+    def fake_entry_points(*args, **kwargs):
+        if kwargs.get("group") == "f2clipboard.plugins":
+            return [ep]
+        return []
+
+    importlib.reload(f2clipboard)
+    monkeypatch.setattr(f2clipboard, "entry_points", fake_entry_points)
+    f2clipboard._loaded_plugins = []
+    f2clipboard._plugin_versions = {}
+    f2clipboard._plugin_paths = {}
+    f2clipboard._load_plugins()
+    runner = CliRunner()
+    result = runner.invoke(f2clipboard.app, ["plugins", "--count", "--yaml"])
+    assert result.exit_code == 0
+    expected = {"count": 1, "plugins": ["sample"]}
+    assert yaml.safe_load(result.stdout) == expected
 
 
 def test_plugins_command_count_versions_json(monkeypatch):
