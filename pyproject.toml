@@ -36,6 +36,9 @@ jira = "f2clipboard.plugins.jira:register"
 
 [tool.pytest.ini_options]
 addopts = "-q"
+markers = [
+    "vcr: mark tests that use pytest-recording",
+]
 
 [tool.isort]
 profile = "black"
