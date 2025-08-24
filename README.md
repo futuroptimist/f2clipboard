@@ -87,6 +87,7 @@ f2clipboard files --dir path/to/project
 - [x] Dry-run option for `files` command to print Markdown instead of copying. 💯
 - [x] Save `files` command output to a file via `--output`. 💯
 - [x] JSON output option for `plugins` command. 💯
+- [x] YAML output option for `plugins` command. 💯
 - [x] Non-interactive mode for `files` command to select all matches via `--all`. 💯
 - [x] Plugin count via `plugins --count`. 💯
 - [x] Show plugin versions via `plugins --versions`. 💯
@@ -246,7 +247,7 @@ Run `f2clipboard` inside GitHub Actions using the bundled composite action:
 ```
 
 Pass any CLI arguments via `args`; the default is `--help`.
-See [docs/github-action.md](docs/github-action.md) for authentication options and more details.
+See [docs/github-action.md](docs/github-action.md) for authentication options, environment variables, and more details.
 
 ## Plugins
 
@@ -292,6 +293,12 @@ Output as JSON:
 
 ```bash
 f2clipboard plugins --json
+```
+
+Output as YAML:
+
+```bash
+f2clipboard plugins --yaml
 ```
 
 Show the number of installed plugins:
