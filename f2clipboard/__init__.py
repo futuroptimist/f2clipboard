@@ -52,7 +52,10 @@ def plugins_command(
     if not _loaded_plugins:
         count_value = 0
         if count and json_output:
-            payload = {"count": count_value, "plugins": {} if versions else []}
+            payload = {
+                "count": count_value,
+                "plugins": {} if (versions or paths) else [],
+            }
             typer.echo(json.dumps(payload))
         elif count:
             typer.echo("0")
@@ -74,7 +77,7 @@ def plugins_command(
     # If filter removes everything, mirror empty behavior again
     if not names:
         if count and json_output:
-            payload = {"count": 0, "plugins": {} if versions else []}
+            payload = {"count": 0, "plugins": {} if (versions or paths) else []}
             typer.echo(json.dumps(payload))
         elif count:
             typer.echo("0")
@@ -92,10 +95,20 @@ def plugins_command(
 
     # Counts should reflect the (possibly filtered) list.
     if count and json_output:
-        if versions:
+        if versions and paths:
+            plugins_data = {
+                name: {
+                    "version": _plugin_versions.get(name, "unknown"),
+                    "path": _plugin_paths.get(name, "unknown"),
+                }
+                for name in names
+            }
+        elif versions:
             plugins_data = {
                 name: _plugin_versions.get(name, "unknown") for name in names
             }
+        elif paths:
+            plugins_data = {name: _plugin_paths.get(name, "unknown") for name in names}
         else:
             plugins_data = names
         typer.echo(json.dumps({"count": len(names), "plugins": plugins_data}))

@@ -309,6 +309,16 @@ f2clipboard plugins --count --json
 {"count": 1, "plugins": ["jira"]}
 ```
 
+Include plugin paths in the JSON output:
+
+```bash
+f2clipboard plugins --count --paths --json
+```
+
+```json
+{"count": 1, "plugins": {"jira": "/path/to/plugin"}}
+```
+
 Show plugin versions:
 
 ```bash
