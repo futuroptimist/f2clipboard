@@ -1,7 +1,8 @@
 # GitHub Action
 
-The repository includes a composite action that runs the `f2clipboard` CLI.
-Use it in your workflows to generate Codex summaries or copy files to the
+The repository includes a composite action ([action.yml](../action.yml)) that runs the
+`f2clipboard` CLI. See the README's [GitHub Action section](../README.md#github-action) for an
+overview. Use the action in your workflows to generate Codex summaries or copy files to the
 clipboard.
 
 ```yaml
