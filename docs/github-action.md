@@ -12,3 +12,13 @@ clipboard.
 
 The `args` input accepts any arguments supported by the CLI and defaults to
 `--help`.
+
+Set tokens as environment variables to authenticate API requests:
+
+```yaml
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}  # optional for log summarisation
+```
+
+See the [README](../README.md#getting-started) for environment setup.
