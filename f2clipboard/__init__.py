@@ -4,6 +4,7 @@ import logging
 from importlib.metadata import PackageNotFoundError, entry_points, version
 
 import typer
+import yaml
 from typer import Typer
 
 from .chat2prompt import chat2prompt_command
@@ -30,6 +31,9 @@ def plugins_command(
     json_output: bool = typer.Option(
         False, "--json", help="Output plugin names as JSON."
     ),
+    yaml_output: bool = typer.Option(
+        False, "--yaml", help="Output plugin names as YAML."
+    ),
     count: bool = typer.Option(
         False, "--count", help="Print the number of installed plugins."
     ),
@@ -48,21 +52,35 @@ def plugins_command(
 ) -> None:
     """List registered plugin names, counts, versions or paths."""
 
-    # No plugins loaded at all: mirror existing behavior
+    if json_output and yaml_output:
+        typer.echo("--json and --yaml cannot be used together", err=True)
+        raise typer.Exit(code=1)
+
+    serializer = None
+    if json_output:
+        serializer = json.dumps
+    elif yaml_output:
+
+        def serializer(obj: object) -> str:  # type: ignore[redefined-outer-name]
+            return yaml.safe_dump(obj, sort_keys=False)
+
+    def _echo_serialized(obj: object) -> None:
+        if serializer:
+            typer.echo(serializer(obj))
+
     if not _loaded_plugins:
-        count_value = 0
-        if count and json_output:
-            payload = {"count": count_value, "plugins": {} if versions else []}
-            typer.echo(json.dumps(payload))
+        if count and serializer:
+            payload = {"count": 0, "plugins": {} if versions or paths else []}
+            _echo_serialized(payload)
         elif count:
             typer.echo("0")
-        elif json_output:
-            typer.echo("{}" if (versions or paths) else "[]")
+        elif serializer:
+            empty = {} if (versions or paths) else []
+            _echo_serialized(empty)
         else:
             typer.echo("No plugins installed")
         return
 
-    # Start from loaded plugins, then apply filter & sort deterministically
     names = list(_loaded_plugins)
     if filter_:
         if ignore_case:
@@ -71,54 +89,46 @@ def plugins_command(
         else:
             names = [name for name in names if filter_ in name]
 
-    # If filter removes everything, mirror empty behavior again
     if not names:
-        if count and json_output:
-            payload = {"count": 0, "plugins": {} if versions else []}
-            typer.echo(json.dumps(payload))
+        if count and serializer:
+            payload = {"count": 0, "plugins": {} if versions or paths else []}
+            _echo_serialized(payload)
         elif count:
             typer.echo("0")
-        elif json_output:
-            typer.echo("{}" if (versions or paths) else "[]")
+        elif serializer:
+            empty = {} if (versions or paths) else []
+            _echo_serialized(empty)
         else:
             typer.echo("No plugins installed")
         return
 
     if sort:
         names = sorted(names)
-
     if reverse:
         names = list(reversed(names))
 
-    # Counts should reflect the (possibly filtered) list.
-    if count and json_output:
-        if versions:
-            plugins_data = {
-                name: _plugin_versions.get(name, "unknown") for name in names
-            }
-        else:
-            plugins_data = names
-        typer.echo(json.dumps({"count": len(names), "plugins": plugins_data}))
-    elif count:
-        typer.echo(str(len(names)))
-    elif json_output:
+    def _build_data() -> object:
         if versions and paths:
-            data = {
+            return {
                 name: {
                     "version": _plugin_versions.get(name, "unknown"),
                     "path": _plugin_paths.get(name, "unknown"),
                 }
                 for name in names
             }
-            typer.echo(json.dumps(data))
-        elif versions:
-            data = {name: _plugin_versions.get(name, "unknown") for name in names}
-            typer.echo(json.dumps(data))
-        elif paths:
-            data = {name: _plugin_paths.get(name, "unknown") for name in names}
-            typer.echo(json.dumps(data))
-        else:
-            typer.echo(json.dumps(names))
+        if versions:
+            return {name: _plugin_versions.get(name, "unknown") for name in names}
+        if paths:
+            return {name: _plugin_paths.get(name, "unknown") for name in names}
+        return names
+
+    if count and serializer:
+        payload = {"count": len(names), "plugins": _build_data()}
+        _echo_serialized(payload)
+    elif count:
+        typer.echo(str(len(names)))
+    elif serializer:
+        _echo_serialized(_build_data())
     elif versions and paths:
         for name in names:
             typer.echo(
