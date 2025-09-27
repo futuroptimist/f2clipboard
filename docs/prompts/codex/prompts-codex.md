@@ -46,7 +46,7 @@ Return **only** the patch (diff) needed.
 
 ## Roadmap implementation prompt
 
-Tasks are tracked in [README.md](../README.md) under "Roadmap" using Markdown checkboxes.
+Tasks are tracked in [README.md](../../README.md) under "Roadmap" using Markdown checkboxes.
 Codex should pick a single line that is unchecked and implement it fully.
 After all checks pass, mark the corresponding line with `💯`.
 
