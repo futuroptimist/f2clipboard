@@ -182,7 +182,10 @@ async def _process_task(url: str, settings: Settings) -> str:
                 )
             else:
                 rendered = f"```text\n{log_text}\n```"
-            sections.append(f"### {run['name']}\n\n{rendered}")
+            name = str(run.get("name", "Unnamed check"))
+            html_url = run.get("html_url")
+            heading = f"### [{name}]({html_url})" if html_url else f"### {name}"
+            sections.append(f"{heading}\n\n{rendered}")
 
     return "\n\n".join(sections) or "No failing checks"
 
