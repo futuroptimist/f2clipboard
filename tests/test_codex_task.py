@@ -11,6 +11,7 @@ from f2clipboard.codex_task import (
     _extract_pr_url,
     _fetch_check_runs,
     _fetch_task_html,
+    _format_run_heading,
     _github_headers,
     _parse_pr_url,
     _process_task,
@@ -51,6 +52,18 @@ def test_parse_pr_url_with_query_and_fragment() -> None:
         "repo",
         42,
     )
+
+
+def test_format_run_heading_with_link() -> None:
+    run = {"name": "CI", "html_url": "https://github.com/owner/repo/actions/runs/1"}
+    assert (
+        _format_run_heading(run)
+        == "### [CI](https://github.com/owner/repo/actions/runs/1)"
+    )
+
+
+def test_format_run_heading_without_link() -> None:
+    assert _format_run_heading({"name": "CI"}) == "### CI"
 
 
 def test_fetch_check_runs_parses_response(monkeypatch):
@@ -171,7 +184,14 @@ def test_process_task_summarises_large_log(monkeypatch):
         return '<a href="https://github.com/o/r/pull/1">PR</a>'
 
     async def fake_runs(pr_url: str, token: str | None):
-        return [{"id": 1, "name": "Job", "conclusion": "failure"}]
+        return [
+            {
+                "id": 1,
+                "name": "Job",
+                "conclusion": "failure",
+                "html_url": "https://github.com/o/r/actions/runs/1",
+            }
+        ]
 
     async def fake_log(client, owner, repo, run_id):
         return "\n".join(f"line {i}" for i in range(1, 201))  # large
@@ -187,6 +207,7 @@ def test_process_task_summarises_large_log(monkeypatch):
     settings = Settings()
     settings.log_size_threshold = 100
     result = asyncio.run(_process_task("http://task", settings))
+    assert "### [Job](https://github.com/o/r/actions/runs/1)" in result
     assert "SUMMARY\n\n<details>" in result
     assert "line 1" in result
     assert f"line {SUMMARY_HEAD_LINES}" in result
@@ -219,6 +240,7 @@ def test_process_task_small_log_skips_summarise(monkeypatch):
     result = asyncio.run(_process_task("http://task", settings))
     assert "short" in result
     assert not called
+    assert result.splitlines()[0] == "### Job"
 
 
 def test_process_task_ignores_non_failed_runs(monkeypatch):
