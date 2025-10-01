@@ -48,7 +48,8 @@ including quoted environment values.
 
 Emit a Markdown snippet ready for pasting back into Codex:
 
-Each failing check becomes a fenced code-block labelled with job name & link.
+Each failing check becomes a level-three Markdown heading linking to the job plus a fenced
+code-block of its log or summary.
 
 Oversized logs are replaced by the summary plus a collapsible <details> section with the first 100 lines for context.
 

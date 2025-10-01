@@ -151,6 +151,16 @@ async def _download_log(
     return _decode_log(resp.content)
 
 
+def _format_run_heading(run: dict[str, Any]) -> str:
+    """Return a Markdown heading linking to the check run when available."""
+
+    name = run.get("name", "Check")
+    url = run.get("html_url") or run.get("details_url")
+    if url:
+        return f"### [{name}]({url})"
+    return f"### {name}"
+
+
 async def _process_task(url: str, settings: Settings) -> str:
     """Download the task page, fetch failing check logs and return Markdown."""
     html = await _fetch_task_html(url, settings.codex_cookie)
@@ -182,7 +192,7 @@ async def _process_task(url: str, settings: Settings) -> str:
                 )
             else:
                 rendered = f"```text\n{log_text}\n```"
-            sections.append(f"### {run['name']}\n\n{rendered}")
+            sections.append(f"{_format_run_heading(run)}\n\n{rendered}")
 
     return "\n\n".join(sections) or "No failing checks"
 
