@@ -304,7 +304,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
     directory = args.dir
     pattern = args.pattern
-    ignore_patterns = parse_gitignore()
+    gitignore_path = os.path.join(directory, ".gitignore")
+    ignore_patterns = parse_gitignore(gitignore_path)
     if args.exclude:
         ignore_patterns.extend(args.exclude)
     files = list(
