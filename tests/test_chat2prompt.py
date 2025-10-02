@@ -24,6 +24,18 @@ def test_extract_text_preserves_line_breaks():
     assert _extract_text(html) == "Hello\nWorld"
 
 
+def test_extract_text_handles_additional_block_tags():
+    html = (
+        "<section>One</section>"
+        "<article>Two</article>"
+        "<blockquote>Quote</blockquote>"
+        "<pre>Line 1\nLine 2</pre>"
+        "<table><tr><td>Cell</td></tr></table>"
+        "<aside>Aside</aside>"
+    )
+    assert _extract_text(html) == "One\nTwo\nQuote\nLine 1\nLine 2\nCell\nAside"
+
+
 def test_extract_text_converts_list_items_to_bullets():
     html = "<ul><li>One</li><li>Two</li></ul>"
     assert _extract_text(html) == "- One\n- Two"
@@ -37,11 +49,6 @@ def test_extract_text_converts_ordered_list_to_numbered_items():
 def test_extract_text_respects_ordered_list_start():
     html = '<ol start="3"><li>First</li><li>Second</li></ol>'
     assert _extract_text(html) == "3. First\n4. Second"
-
-
-def test_extract_text_handles_additional_block_tags():
-    html = "<section>Alpha</section><article>Beta</article><aside>Gamma</aside>"
-    assert _extract_text(html) == "Alpha\nBeta\nGamma"
 
 
 def test_extract_text_handles_preformatted_blocks():
