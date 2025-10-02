@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import subprocess
 from pathlib import Path
 from typing import Iterable
@@ -13,6 +14,26 @@ def _parse_git_status(output: str) -> list[str]:
     """Return modified file paths parsed from ``git status --porcelain`` output."""
 
     files: list[str] = []
+
+    if "\0" in output:
+        entries = [entry for entry in output.split("\0") if entry]
+        entry_iter = iter(entries)
+        for entry in entry_iter:
+            status = entry[:2]
+            path = entry[3:]
+            if status and status[0] in {"R", "C"}:
+                # Renames/copies include the old path in the current entry and
+                # the new path as the next NUL-delimited payload. Prefer the
+                # new path.
+                try:
+                    path = next(entry_iter)
+                except StopIteration:  # pragma: no cover - defensive guard
+                    break
+            if "D" in status or not path:
+                continue
+            files.append(path)
+        return files
+
     for line in output.splitlines():
         if not line:
             continue
@@ -20,6 +41,11 @@ def _parse_git_status(output: str) -> list[str]:
         path = line[3:].strip()
         if not path:
             continue
+        if path.startswith('"') and path.endswith('"'):
+            try:
+                path = ast.literal_eval(path)
+            except (SyntaxError, ValueError):  # pragma: no cover - defensive guard
+                path = path.strip('"')
         if "->" in path:
             path = path.split("->", 1)[1].strip()
         if "D" in status:
@@ -32,7 +58,7 @@ def _collect_modified_files(repo: Path) -> list[str]:
     """Return tracked files with modifications inside *repo*."""
 
     proc = subprocess.run(
-        ["git", "status", "--porcelain"],
+        ["git", "status", "--porcelain", "-z"],
         cwd=repo,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
