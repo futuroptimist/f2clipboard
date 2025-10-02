@@ -146,7 +146,7 @@ f2clipboard codex-task https://chatgpt.com/codex/tasks/task_123 --log-size-thres
 ```
 
 The default threshold can also be set via the ``LOG_SIZE_THRESHOLD`` environment variable in
-your ``.env`` file.
+your ``.env`` file. Set the threshold to ``0`` to disable summarisation entirely.
 
 Generate a prompt that reads a shared chat transcript and implements any code or configuration
 changes it mentions:

@@ -243,6 +243,43 @@ def test_process_task_small_log_skips_summarise(monkeypatch):
     assert result.splitlines()[0] == "### Job"
 
 
+def test_process_task_threshold_zero_disables_summarise(monkeypatch):
+    async def fake_html(url: str, cookie: str | None = None) -> str:
+        return '<a href="https://github.com/o/r/pull/1">PR</a>'
+
+    async def fake_runs(pr_url: str, token: str | None):
+        return [
+            {
+                "id": 1,
+                "name": "Job",
+                "conclusion": "failure",
+                "html_url": "https://github.com/o/r/actions/runs/1",
+            }
+        ]
+
+    async def fake_log(client, owner, repo, run_id):
+        return "\n".join(f"line {i}" for i in range(1, 201))
+
+    called: list[str] = []
+
+    async def fake_summary(text: str, settings: Settings) -> str:
+        called.append("yes")
+        return "SUMMARY"
+
+    monkeypatch.setattr("f2clipboard.codex_task._fetch_task_html", fake_html)
+    monkeypatch.setattr("f2clipboard.codex_task._fetch_check_runs", fake_runs)
+    monkeypatch.setattr("f2clipboard.codex_task._download_log", fake_log)
+    monkeypatch.setattr("f2clipboard.codex_task.summarise_log", fake_summary)
+
+    settings = Settings()
+    settings.log_size_threshold = 0
+
+    result = asyncio.run(_process_task("http://task", settings))
+    assert "SUMMARY" not in result
+    assert "line 150" in result
+    assert not called
+
+
 def test_process_task_ignores_non_failed_runs(monkeypatch):
     async def fake_html(url: str, cookie: str | None = None) -> str:
         return '<a href="https://github.com/o/r/pull/1">PR</a>'

@@ -171,6 +171,8 @@ async def _process_task(url: str, settings: Settings) -> str:
     check_runs = await _fetch_check_runs(pr_url, settings.github_token)
     owner, repo, _ = _parse_pr_url(pr_url)
     sections: list[str] = []
+    threshold = settings.log_size_threshold or None
+
     async with httpx.AsyncClient(
         base_url=GITHUB_API, headers=_github_headers(settings.github_token)
     ) as client:
@@ -179,7 +181,10 @@ async def _process_task(url: str, settings: Settings) -> str:
                 continue
             log_text = await _download_log(client, owner, repo, run["id"])
             log_text = redact_secrets(log_text)
-            if len(log_text.encode()) > settings.log_size_threshold:
+            should_summarise = False
+            if threshold is not None:
+                should_summarise = len(log_text.encode()) > threshold
+            if should_summarise:
                 # For oversized logs, delegate to the configured LLM to produce a concise
                 # summary and only retain a short snippet of the original output for
                 # context. This keeps the resulting Markdown manageable while still
@@ -208,7 +213,7 @@ def codex_task_command(
         int | None,
         typer.Option(
             "--log-size-threshold",
-            help="Summarise logs larger than this many bytes.",
+            help="Summarise logs larger than this many bytes (0 disables summarisation).",
         ),
     ] = None,
     openai_model: Annotated[
