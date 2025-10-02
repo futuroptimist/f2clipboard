@@ -9,6 +9,15 @@ import clipboard
 import httpx
 import typer
 
+_BLOCK_LEVEL_PATTERN = re.compile(
+    r"</?(?:"
+    r"br|p|div|section|article|header|footer|nav|main|aside|pre|blockquote|"
+    r"figure|figcaption|table|thead|tbody|tfoot|tr|dl|fieldset|address|form|hr|"
+    r"h[1-6]|ul|ol)"
+    r"[^>]*>",
+    flags=re.IGNORECASE,
+)
+
 
 def _extract_text(html_text: str) -> str:
     """Return plain text from HTML, preserving line breaks and bullet points."""
@@ -32,9 +41,7 @@ def _extract_text(html_text: str) -> str:
     )
     html_text = re.sub(r"<li[^>]*>", "\n- ", html_text, flags=re.IGNORECASE)
     html_text = re.sub(r"</li[^>]*>", "\n", html_text, flags=re.IGNORECASE)
-    html_text = re.sub(
-        r"</?(?:br|p|div|h[1-6])[^>]*>", "\n", html_text, flags=re.IGNORECASE
-    )
+    html_text = _BLOCK_LEVEL_PATTERN.sub("\n", html_text)
     text = re.sub(r"<[^>]+>", "", html_text)
     text = html.unescape(text)
     lines = [line.strip() for line in text.splitlines()]

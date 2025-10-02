@@ -161,9 +161,10 @@ The prompt is copied to your clipboard by default. To skip copying, use ``--no-c
 f2clipboard chat2prompt https://chatgpt.com/share/abcdefg --no-clipboard
 ```
 
-HTML tags are stripped and block-level elements become newlines to preserve chat formatting.
-Unordered lists are converted to `-` bullets and ordered lists become numbered items,
-honouring any HTML `start` attributes.
+HTML tags are stripped and block-level elements (including sectioning tags such as
+`<section>`, `<article>`, `<aside>`, and preformatted blocks like `<pre>` or `<blockquote>`)
+become newlines to preserve chat formatting. Unordered lists are converted to `-` bullets and
+ordered lists become numbered items, honouring any HTML `start` attributes.
 
 Specify a different platform with ``--platform``:
 
