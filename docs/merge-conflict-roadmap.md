@@ -7,12 +7,12 @@ This checklist captures the workflow for resolving merge conflicts in pull reque
   - [ ] `git checkout pr-merge`
   - [ ] Determine the base branch (`main` or from PR metadata)
 - [ ] Attempt automatic resolutions
-  - [ ] Strategy A – merge with `-X ours` and run checks
-    - [ ] `pre-commit run --files <modified_files>`
-    - [ ] `pytest -q`
-  - [ ] Strategy B – merge with `-X theirs` and run checks
-    - [ ] `pre-commit run --files <modified_files>`
-    - [ ] `pytest -q`
+- [ ] Strategy A – merge with `-X ours` and run checks
+  - [x] `pre-commit run --files <modified_files>` (use `f2clipboard merge-checks`)
+  - [x] `pytest -q` (covered by `f2clipboard merge-checks`)
+- [ ] Strategy B – merge with `-X theirs` and run checks
+  - [x] `pre-commit run --files <modified_files>` (use `f2clipboard merge-checks`)
+  - [x] `pytest -q` (covered by `f2clipboard merge-checks`)
 - [ ] If both strategies fail
   - [ ] Collect conflicting hunks: `git --no-pager diff --name-only --diff-filter=U`
   - [ ] Use the Codex merge-conflicts prompt to generate a patch
