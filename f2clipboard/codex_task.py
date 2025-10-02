@@ -192,7 +192,8 @@ async def _process_task(url: str, settings: Settings) -> str:
                 summary = await summarise_log(log_text, settings)
                 snippet = "\n".join(log_text.splitlines()[:SUMMARY_HEAD_LINES])
                 rendered = (
-                    f"{summary}\n\n<details>\n<summary>First {SUMMARY_HEAD_LINES} lines</summary>\n\n"
+                    f"```text\n{summary}\n```\n\n"
+                    f"<details>\n<summary>First {SUMMARY_HEAD_LINES} lines</summary>\n\n"
                     f"```text\n{snippet}\n```\n</details>"
                 )
             else:

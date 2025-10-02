@@ -208,7 +208,8 @@ def test_process_task_summarises_large_log(monkeypatch):
     settings.log_size_threshold = 100
     result = asyncio.run(_process_task("http://task", settings))
     assert "### [Job](https://github.com/o/r/actions/runs/1)" in result
-    assert "SUMMARY\n\n<details>" in result
+    assert "```text\nSUMMARY\n```" in result
+    assert "<details>" in result
     assert "line 1" in result
     assert f"line {SUMMARY_HEAD_LINES}" in result
     assert f"line {SUMMARY_HEAD_LINES + 1}" not in result
