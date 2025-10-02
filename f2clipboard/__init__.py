@@ -10,6 +10,7 @@ from typer import Typer
 from .chat2prompt import chat2prompt_command
 from .codex_task import codex_task_command
 from .files import files_command
+from .merge_checks import merge_checks_command
 
 try:
     __version__ = version("f2clipboard")
@@ -20,6 +21,7 @@ app = Typer(add_completion=False, help="Flows \u2192 clipboard automation CLI")
 app.command("codex-task")(codex_task_command)
 app.command("chat2prompt")(chat2prompt_command)
 app.command("files")(files_command)
+app.command("merge-checks")(merge_checks_command)
 
 _loaded_plugins: list[str] = []
 _plugin_versions: dict[str, str] = {}

@@ -241,6 +241,19 @@ Check the installed version:
 f2clipboard --version
 ```
 
+### Merge conflict helpers
+
+Run the standard checks after resolving conflicts:
+
+```bash
+f2clipboard merge-checks
+```
+
+The command looks for modified files in the current repository, runs
+`pre-commit run --files` for those paths, and then executes `pytest -q`. Use
+`--file` to pass an explicit list of files or `--repo` to point at a different
+working tree.
+
 ## GitHub Action
 
 Run `f2clipboard` inside GitHub Actions using the bundled composite action:
