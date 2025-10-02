@@ -110,7 +110,7 @@ def test_process_task_redacts(monkeypatch):
     monkeypatch.setattr("f2clipboard.codex_task.summarise_log", fake_summary)
 
     settings = Settings()
-    settings.log_size_threshold = 0
+    settings.log_size_threshold = 1
     result = asyncio.run(_process_task("http://task", settings))
     assert "abcdef123456" not in result  # pragma: allowlist secret
     assert "SUMMARY" in result
