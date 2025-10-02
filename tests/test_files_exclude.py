@@ -102,3 +102,22 @@ def test_legacy_main_uses_exclude(monkeypatch, tmp_path):
 
     assert "b.py" not in copied["data"]
     assert "a.py" in copied["data"]
+
+
+def test_legacy_main_reads_gitignore_from_target(monkeypatch, tmp_path, capsys):
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / ".gitignore").write_text("ignored.py\n")
+    (project / "kept.py").write_text("keep")
+    (project / "ignored.py").write_text("skip")
+    legacy = _load_legacy_module()
+
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    monkeypatch.chdir(elsewhere)
+
+    legacy.main(["--dir", str(project), "--pattern", "*.py", "--all", "--dry-run"])
+
+    out = capsys.readouterr().out
+    assert "kept.py" in out
+    assert "ignored.py" not in out
