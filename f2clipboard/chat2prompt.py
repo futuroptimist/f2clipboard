@@ -32,9 +32,36 @@ def _extract_text(html_text: str) -> str:
     )
     html_text = re.sub(r"<li[^>]*>", "\n- ", html_text, flags=re.IGNORECASE)
     html_text = re.sub(r"</li[^>]*>", "\n", html_text, flags=re.IGNORECASE)
-    html_text = re.sub(
-        r"</?(?:br|p|div|h[1-6])[^>]*>", "\n", html_text, flags=re.IGNORECASE
+    block_tags = (
+        "br",
+        "p",
+        "div",
+        "h[1-6]",
+        "section",
+        "article",
+        "header",
+        "footer",
+        "nav",
+        "main",
+        "aside",
+        "blockquote",
+        "figure",
+        "figcaption",
+        "pre",
+        "table",
+        "thead",
+        "tbody",
+        "tfoot",
+        "tr",
+        "dl",
+        "dt",
+        "dd",
+        "ul",
+        "ol",
+        "hr",
     )
+    pattern = r"</?(?:" + "|".join(block_tags) + r")[^>]*>"
+    html_text = re.sub(pattern, "\n", html_text, flags=re.IGNORECASE)
     text = re.sub(r"<[^>]+>", "", html_text)
     text = html.unescape(text)
     lines = [line.strip() for line in text.splitlines()]

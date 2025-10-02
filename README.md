@@ -164,6 +164,8 @@ f2clipboard chat2prompt https://chatgpt.com/share/abcdefg --no-clipboard
 HTML tags are stripped and block-level elements become newlines to preserve chat formatting.
 Unordered lists are converted to `-` bullets and ordered lists become numbered items,
 honouring any HTML `start` attributes.
+Sections, articles, blockquotes, preformatted blocks, and tables also render on their own
+lines to keep multi-part conversations readable.
 
 Specify a different platform with ``--platform``:
 

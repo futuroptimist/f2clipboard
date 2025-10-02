@@ -24,6 +24,17 @@ def test_extract_text_preserves_line_breaks():
     assert _extract_text(html) == "Hello\nWorld"
 
 
+def test_extract_text_handles_additional_block_tags():
+    html = (
+        "<section>One</section>"
+        "<article>Two</article>"
+        "<blockquote>Quote</blockquote>"
+        "<pre>Line 1\nLine 2</pre>"
+        "<table><tr><td>Cell</td></tr></table>"
+    )
+    assert _extract_text(html) == "One\nTwo\nQuote\nLine 1\nLine 2\nCell"
+
+
 def test_extract_text_converts_list_items_to_bullets():
     html = "<ul><li>One</li><li>Two</li></ul>"
     assert _extract_text(html) == "- One\n- Two"
