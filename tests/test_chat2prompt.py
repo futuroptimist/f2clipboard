@@ -39,6 +39,16 @@ def test_extract_text_respects_ordered_list_start():
     assert _extract_text(html) == "3. First\n4. Second"
 
 
+def test_extract_text_handles_additional_block_tags():
+    html = "<section>Alpha</section><article>Beta</article><aside>Gamma</aside>"
+    assert _extract_text(html) == "Alpha\nBeta\nGamma"
+
+
+def test_extract_text_handles_preformatted_blocks():
+    html = "<pre>line1\nline2</pre>"
+    assert _extract_text(html) == "line1\nline2"
+
+
 def test_chat2prompt_command_copies_prompt(monkeypatch, capsys):
     def fake_fetch(url: str, timeout: float) -> str:
         assert url == "http://chat"
