@@ -243,6 +243,17 @@ f2clipboard --version
 
 ### Merge conflict helpers
 
+Try automatic merge strategies when rebasing a PR branch:
+
+```bash
+f2clipboard merge-resolve --base origin/main --strategy both
+```
+
+The command ensures the working tree is clean, attempts the requested merge
+strategy (or both), and by default runs `f2clipboard merge-checks` after a
+successful merge. Pass `--no-run-checks` to skip automated validation or use
+`--strategy ours`/`--strategy theirs` to attempt a single strategy.
+
 Run the standard checks after resolving conflicts:
 
 ```bash

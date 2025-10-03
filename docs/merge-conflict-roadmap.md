@@ -6,11 +6,11 @@ This checklist captures the workflow for resolving merge conflicts in pull reque
   - [ ] `git fetch origin pull/<PR_NUMBER>/head:pr-merge`
   - [ ] `git checkout pr-merge`
   - [ ] Determine the base branch (`main` or from PR metadata)
-- [ ] Attempt automatic resolutions
-- [ ] Strategy A – merge with `-X ours` and run checks
+- [x] Attempt automatic resolutions (use `f2clipboard merge-resolve`)
+- [x] Strategy A – merge with `-X ours` and run checks (`f2clipboard merge-resolve --strategy ours`)
   - [x] `pre-commit run --files <modified_files>` (use `f2clipboard merge-checks`)
   - [x] `pytest -q` (covered by `f2clipboard merge-checks`)
-- [ ] Strategy B – merge with `-X theirs` and run checks
+- [x] Strategy B – merge with `-X theirs` and run checks (`f2clipboard merge-resolve --strategy theirs`)
   - [x] `pre-commit run --files <modified_files>` (use `f2clipboard merge-checks`)
   - [x] `pytest -q` (covered by `f2clipboard merge-checks`)
 - [ ] If both strategies fail
