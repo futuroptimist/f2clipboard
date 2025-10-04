@@ -14,7 +14,7 @@ This checklist captures the workflow for resolving merge conflicts in pull reque
   - [x] `pre-commit run --files <modified_files>` (use `f2clipboard merge-checks`)
   - [x] `pytest -q` (covered by `f2clipboard merge-checks`)
 - [ ] If both strategies fail
-  - [ ] Collect conflicting hunks: `git --no-pager diff --name-only --diff-filter=U`
-  - [ ] Use the Codex merge-conflicts prompt to generate a patch
+  - [x] Collect conflicting hunks: `git --no-pager diff --name-only --diff-filter=U`
+  - [x] Use the Codex merge-conflicts prompt to generate a patch (emitted by `merge-resolve`)
   - [ ] Apply the patch and rerun checks
 - [ ] Post a PR comment summarizing the outcome (strategy used or need for manual review)
