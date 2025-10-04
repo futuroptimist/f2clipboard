@@ -105,6 +105,12 @@ def test_merge_resolve_attempts_both_strategies(monkeypatch, tmp_path: Path) -> 
             return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
         if cmd[:5] == ["git", "merge", "--no-commit", "-X", "ours"]:
             return subprocess.CompletedProcess(cmd, 1, stdout="", stderr="conflict")
+        if cmd[:5] == ["git", "--no-pager", "diff", "--name-only", "--diff-filter=U"]:
+            return subprocess.CompletedProcess(
+                cmd, 0, stdout="conflict.txt\n", stderr=""
+            )
+        if cmd[:4] == ["git", "--no-pager", "diff", "--diff-filter=U"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
         if cmd == ["git", "merge", "--abort"]:
             return subprocess.CompletedProcess(cmd, 0)
         if cmd[:5] == ["git", "merge", "--no-commit", "-X", "theirs"]:
@@ -157,3 +163,64 @@ def test_merge_resolve_runs_checks(monkeypatch, tmp_path: Path) -> None:
     )
     assert result.exit_code == 0
     assert called["repo"] == repo
+
+
+def test_merge_resolve_outputs_conflict_prompt(monkeypatch, tmp_path: Path) -> None:
+    commands: list[list[str]] = []
+
+    def fake_run(cmd, *args, **kwargs):
+        commands.append(cmd)
+        if cmd[:3] == ["git", "status", "--porcelain"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        if cmd[:5] == ["git", "merge", "--no-commit", "-X", "ours"]:
+            return subprocess.CompletedProcess(
+                cmd, 1, stdout="", stderr="conflict ours"
+            )
+        if cmd == ["git", "merge", "--abort"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        if cmd[:5] == ["git", "merge", "--no-commit", "-X", "theirs"]:
+            return subprocess.CompletedProcess(
+                cmd, 1, stdout="", stderr="conflict theirs"
+            )
+        if cmd[:5] == ["git", "--no-pager", "diff", "--name-only", "--diff-filter=U"]:
+            return subprocess.CompletedProcess(
+                cmd, 0, stdout="foo.txt\nbar.txt\n", stderr=""
+            )
+        if cmd[:4] == ["git", "--no-pager", "diff", "--diff-filter=U"]:
+            diff = (
+                "diff --git a/foo.txt b/foo.txt\n"
+                "<<<<<<< HEAD\nfoo\n=======\nbar\n>>>>>>> origin/main\n"
+            )
+            return subprocess.CompletedProcess(cmd, 0, stdout=diff, stderr="")
+        raise AssertionError(f"Unexpected command: {cmd}")
+
+    monkeypatch.setattr("f2clipboard.merge_resolve.subprocess.run", fake_run)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        f2clipboard.app,
+        [
+            "merge-resolve",
+            "--repo",
+            str(tmp_path),
+            "--base",
+            "origin/main",
+            "--strategy",
+            "both",
+            "--no-run-checks",
+        ],
+    )
+
+    assert result.exit_code == 1
+    stdout = result.stdout
+    assert "Conflicting files:" in stdout
+    assert "- foo.txt" in stdout
+    assert "Codex merge-conflicts prompt" in stdout
+    assert "SYSTEM:" in stdout
+    assert "```diff" in stdout
+    assert "<<<<<<< HEAD" in stdout
+    # Ensure diff commands executed
+    assert any(
+        cmd[:5] == ["git", "--no-pager", "diff", "--name-only", "--diff-filter=U"]
+        for cmd in commands
+    )

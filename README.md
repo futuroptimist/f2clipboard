@@ -254,6 +254,10 @@ strategy (or both), and by default runs `f2clipboard merge-checks` after a
 successful merge. Pass `--no-run-checks` to skip automated validation or use
 `--strategy ours`/`--strategy theirs` to attempt a single strategy.
 
+If neither strategy succeeds, the command captures the conflicting file list and
+unmerged diff hunks, then prints a Codex-ready prompt so you can request a
+patch before rerunning `f2clipboard merge-checks`.
+
 Run the standard checks after resolving conflicts:
 
 ```bash
