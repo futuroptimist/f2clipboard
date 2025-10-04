@@ -243,16 +243,19 @@ f2clipboard --version
 
 ### Merge conflict helpers
 
-Try automatic merge strategies when rebasing a PR branch:
+Fetch a GitHub pull request and try automatic merge strategies:
 
 ```bash
-f2clipboard merge-resolve --base origin/main --strategy both
+f2clipboard merge-resolve --pr 123 --strategy both
 ```
 
-The command ensures the working tree is clean, attempts the requested merge
-strategy (or both), and by default runs `f2clipboard merge-checks` after a
-successful merge. Pass `--no-run-checks` to skip automated validation or use
-`--strategy ours`/`--strategy theirs` to attempt a single strategy.
+The command fetches the PR's head (`pull/<number>/head`), checks it out into a
+local `pr-<number>` branch, looks up the base branch from the GitHub API, and
+then attempts the requested merge strategy (or both). It also ensures the
+working tree is clean and by default runs `f2clipboard merge-checks` after a
+successful merge. Pass `--no-run-checks` to skip automated validation, use
+`--strategy ours`/`--strategy theirs` to attempt a single strategy, or override
+the merge base with `--base`.
 
 Run the standard checks after resolving conflicts:
 

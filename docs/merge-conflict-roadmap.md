@@ -2,10 +2,10 @@
 
 This checklist captures the workflow for resolving merge conflicts in pull requests.
 
-- [ ] Fetch PR metadata and check out the PR branch
-  - [ ] `git fetch origin pull/<PR_NUMBER>/head:pr-merge`
-  - [ ] `git checkout pr-merge`
-  - [ ] Determine the base branch (`main` or from PR metadata)
+- [x] Fetch PR metadata and check out the PR branch (use `f2clipboard merge-resolve --pr`)
+  - [x] Fetch the PR head with `git fetch origin pull/<PR_NUMBER>/head:pr-<PR_NUMBER>`
+  - [x] Check it out into a local `pr-<PR_NUMBER>` branch
+  - [x] Determine the base branch from PR metadata (falling back to `origin/main`)
 - [x] Attempt automatic resolutions (use `f2clipboard merge-resolve`)
 - [x] Strategy A – merge with `-X ours` and run checks (`f2clipboard merge-resolve --strategy ours`)
   - [x] `pre-commit run --files <modified_files>` (use `f2clipboard merge-checks`)
