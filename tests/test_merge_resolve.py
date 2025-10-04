@@ -157,3 +157,135 @@ def test_merge_resolve_runs_checks(monkeypatch, tmp_path: Path) -> None:
     )
     assert result.exit_code == 0
     assert called["repo"] == repo
+
+
+def test_merge_resolve_fetches_pr_and_uses_base(monkeypatch, tmp_path: Path) -> None:
+    repo = tmp_path / "worktree"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    commands: list[list[str]] = []
+
+    def fake_run(cmd, *args, **kwargs):
+        commands.append(cmd)
+        if cmd[:3] == ["git", "status", "--porcelain"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        if cmd[:4] == ["git", "config", "--get", "remote.origin.url"]:
+            return subprocess.CompletedProcess(
+                cmd,
+                0,
+                stdout="https://github.com/example/repo.git\n",
+                stderr="",
+            )
+        if cmd[:4] == ["git", "fetch", "--force", "origin"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        if cmd[:2] == ["git", "checkout"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        if cmd[:6] == ["git", "merge", "--no-commit", "-X", "ours", "origin/develop"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        if cmd[:2] == ["git", "merge"] and cmd[1] == "--abort":
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        raise AssertionError(f"Unexpected command: {cmd}")
+
+    monkeypatch.setattr("f2clipboard.merge_resolve.subprocess.run", fake_run)
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._fetch_pr_base",
+        lambda owner, repo, number, token: "develop",
+    )
+
+    class DummySettings:
+        github_token = "token"
+
+        def __init__(self) -> None:  # pragma: no cover - nothing to do
+            return
+
+    monkeypatch.setattr("f2clipboard.merge_resolve.Settings", DummySettings)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        f2clipboard.app,
+        [
+            "merge-resolve",
+            "--repo",
+            str(repo),
+            "--strategy",
+            "ours",
+            "--no-run-checks",
+            "--pr",
+            "https://github.com/example/repo/pull/123",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert ["git", "fetch", "--force", "origin", "pull/123/head:pr-123"] in commands
+    assert ["git", "checkout", "pr-123"] in commands
+    assert any(
+        call[:6] == ["git", "merge", "--no-commit", "-X", "ours", "origin/develop"]
+        for call in commands
+    )
+
+
+def test_merge_resolve_pr_respects_explicit_base(monkeypatch, tmp_path: Path) -> None:
+    repo = tmp_path / "worktree"
+    repo.mkdir()
+    (repo / ".git").mkdir()
+    commands: list[list[str]] = []
+
+    def fake_run(cmd, *args, **kwargs):
+        commands.append(cmd)
+        if cmd[:3] == ["git", "status", "--porcelain"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        if cmd[:4] == ["git", "config", "--get", "remote.origin.url"]:
+            return subprocess.CompletedProcess(
+                cmd,
+                0,
+                stdout="https://github.com/example/repo.git\n",
+                stderr="",
+            )
+        if cmd[:4] == ["git", "fetch", "--force", "origin"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        if cmd[:2] == ["git", "checkout"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        if cmd[:6] == ["git", "merge", "--no-commit", "-X", "ours", "feature-base"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        if cmd[:2] == ["git", "merge"] and cmd[1] == "--abort":
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        raise AssertionError(f"Unexpected command: {cmd}")
+
+    monkeypatch.setattr("f2clipboard.merge_resolve.subprocess.run", fake_run)
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._fetch_pr_base",
+        lambda owner, repo, number, token: "develop",
+    )
+
+    class DummySettings:
+        github_token = "token"
+
+        def __init__(self) -> None:  # pragma: no cover - nothing to do
+            return
+
+    monkeypatch.setattr("f2clipboard.merge_resolve.Settings", DummySettings)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        f2clipboard.app,
+        [
+            "merge-resolve",
+            "--repo",
+            str(repo),
+            "--strategy",
+            "ours",
+            "--no-run-checks",
+            "--pr",
+            "123",
+            "--base",
+            "feature-base",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert ["git", "fetch", "--force", "origin", "pull/123/head:pr-123"] in commands
+    assert ["git", "checkout", "pr-123"] in commands
+    assert any(
+        call[:6] == ["git", "merge", "--no-commit", "-X", "ours", "feature-base"]
+        for call in commands
+    )
