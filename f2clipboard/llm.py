@@ -71,3 +71,85 @@ async def summarise_log(text: str, settings: Settings) -> str:
         # Fall back to truncation on any API error
         pass
     return text[:100] + "\n…\n"
+
+
+async def _openai_conflict_patch(diff: str, api_key: str, model: str) -> str:
+    """Request a merge-conflict patch suggestion from OpenAI."""
+
+    headers = {"Authorization": f"Bearer {api_key}"}
+    payload = {
+        "model": model,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "You resolve git merge conflicts by producing unified diffs that "
+                    "apply cleanly with `git apply`."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    "Resolve the following merge conflicts. "
+                    "Return only the unified diff patch without explanation.\n\n"
+                    f"{diff}"
+                ),
+            },
+        ],
+        "temperature": 0,
+        "max_tokens": 1200,
+    }
+    async with httpx.AsyncClient(base_url="https://api.openai.com/v1") as client:
+        response = await client.post("/chat/completions", json=payload, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        return data["choices"][0]["message"]["content"].strip()
+
+
+async def _anthropic_conflict_patch(diff: str, api_key: str, model: str) -> str:
+    """Request a merge-conflict patch suggestion from Anthropic."""
+
+    headers = {
+        "x-api-key": api_key,
+        "anthropic-version": "2023-06-01",
+    }
+    payload = {
+        "model": model,
+        "max_tokens": 1200,
+        "messages": [
+            {
+                "role": "user",
+                "content": (
+                    "Resolve the following git merge conflicts by returning a unified diff "
+                    "patch suitable for `git apply`. Provide only the diff.\n\n"
+                    f"{diff}"
+                ),
+            }
+        ],
+    }
+    async with httpx.AsyncClient(base_url="https://api.anthropic.com/v1") as client:
+        response = await client.post("/messages", json=payload, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        # Anthropic responses contain blocks; expect first item is text
+        return data["content"][0]["text"].strip()
+
+
+async def generate_conflict_patch(diff: str, settings: Settings) -> str | None:
+    """Generate a patch suggestion for merge conflicts using configured LLMs."""
+
+    if not diff.strip():
+        return None
+
+    try:
+        if settings.openai_api_key:
+            return await _openai_conflict_patch(
+                diff, settings.openai_api_key, settings.openai_model
+            )
+        if settings.anthropic_api_key:
+            return await _anthropic_conflict_patch(
+                diff, settings.anthropic_api_key, settings.anthropic_model
+            )
+    except Exception:
+        return None
+    return None
