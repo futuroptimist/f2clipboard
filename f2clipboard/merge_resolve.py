@@ -347,25 +347,50 @@ def merge_resolve_command(
     )
 
     if run_checks:
-        merge_checks_command(files=None, repo=repo)
+        try:
+            merge_checks_command(files=None, repo=repo)
+        except typer.Exit as exc:
+            if pr_number is not None and owner and repo_name and settings is not None:
+                exit_code = exc.exit_code if exc.exit_code is not None else 1
+                summary = (
+                    "❌ `f2clipboard merge-resolve` completed automatically using the "
+                    f"`{succeeded.value}` strategy, but merge checks failed with exit code "
+                    f"{exit_code}. Please review the check output and address any issues."
+                )
+                _post_pr_comment(
+                    owner,
+                    repo_name,
+                    pr_number,
+                    settings.github_token,
+                    summary,
+                )
+            raise
+        else:
+            if pr_number is not None and owner and repo_name and settings is not None:
+                summary = (
+                    "✅ `f2clipboard merge-resolve` completed automatically using the "
+                    f"`{succeeded.value}` strategy. Merge checks were executed successfully."
+                )
+                _post_pr_comment(
+                    owner,
+                    repo_name,
+                    pr_number,
+                    settings.github_token,
+                    summary,
+                )
     else:
         typer.echo(
             "Run `f2clipboard merge-checks` to validate the merge when convenient."
         )
-
-    if pr_number is not None and owner and repo_name and settings is not None:
-        summary = (
-            "✅ `f2clipboard merge-resolve` completed automatically using the "
-            f"`{succeeded.value}` strategy."
-        )
-        if run_checks:
-            summary += " Merge checks were executed successfully."
-        else:
-            summary += " Remember to run validation checks before pushing."
-        _post_pr_comment(
-            owner,
-            repo_name,
-            pr_number,
-            settings.github_token,
-            summary,
-        )
+        if pr_number is not None and owner and repo_name and settings is not None:
+            summary = (
+                "✅ `f2clipboard merge-resolve` completed automatically using the "
+                f"`{succeeded.value}` strategy. Remember to run validation checks before pushing."
+            )
+            _post_pr_comment(
+                owner,
+                repo_name,
+                pr_number,
+                settings.github_token,
+                summary,
+            )
