@@ -198,6 +198,44 @@ def _checkout_pr_branch(repo: Path, number: int) -> str:
     return branch
 
 
+def _post_pr_comment(
+    owner: str,
+    repo: str,
+    number: int,
+    token: str | None,
+    body: str,
+) -> None:
+    """Post a summarising PR comment when authentication is available."""
+
+    token = token.strip() if token else None
+    if not token:
+        typer.echo(
+            "Skipping PR comment because GITHUB_TOKEN is not configured.",
+            err=True,
+        )
+        return
+
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "f2clipboard",
+        "Authorization": f"Bearer {token}",
+    }
+
+    try:
+        response = httpx.post(
+            f"{GITHUB_API}/repos/{owner}/{repo}/issues/{number}/comments",
+            headers=headers,
+            json={"body": body},
+            timeout=10.0,
+        )
+        response.raise_for_status()
+    except httpx.HTTPError as exc:
+        typer.echo(f"Warning: Failed to post PR comment: {exc}", err=True)
+        return
+
+    typer.echo("Posted merge summary comment to the PR.")
+
+
 def merge_resolve_command(
     base: str | None = typer.Option(
         None,
@@ -228,7 +266,9 @@ def merge_resolve_command(
     pr: str | None = typer.Option(
         None,
         "--pr",
-        help="PR number or GitHub pull request URL to fetch and check out before merging.",
+        help=(
+            "PR number or URL to fetch, check out and comment on before merging when authenticated."
+        ),
     ),
 ) -> None:
     """Attempt automatic merge conflict resolution strategies."""
@@ -243,6 +283,11 @@ def merge_resolve_command(
         base_provided = base_source not in (None, ParameterSource.DEFAULT)
 
     merge_base = base if base is not None else None
+
+    pr_number: int | None = None
+    owner: str | None = None
+    repo_name: str | None = None
+    settings: Settings | None = None
 
     if pr:
         try:
@@ -285,6 +330,15 @@ def merge_resolve_command(
         typer.echo(
             "Automatic merge strategies failed. Manual intervention required.", err=True
         )
+        if pr_number is not None and owner and repo_name and settings is not None:
+            _post_pr_comment(
+                owner,
+                repo_name,
+                pr_number,
+                settings.github_token,
+                "⚠️ `f2clipboard merge-resolve` could not resolve the merge automatically. "
+                "Manual conflict resolution is required.",
+            )
         raise typer.Exit(code=1)
 
     typer.echo(f"Merge completed using strategy '{succeeded.value}'.")
@@ -297,4 +351,21 @@ def merge_resolve_command(
     else:
         typer.echo(
             "Run `f2clipboard merge-checks` to validate the merge when convenient."
+        )
+
+    if pr_number is not None and owner and repo_name and settings is not None:
+        summary = (
+            "✅ `f2clipboard merge-resolve` completed automatically using the "
+            f"`{succeeded.value}` strategy."
+        )
+        if run_checks:
+            summary += " Merge checks were executed successfully."
+        else:
+            summary += " Remember to run validation checks before pushing."
+        _post_pr_comment(
+            owner,
+            repo_name,
+            pr_number,
+            settings.github_token,
+            summary,
         )
