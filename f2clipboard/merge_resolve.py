@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import re
 import subprocess
 from enum import Enum
@@ -13,6 +14,7 @@ import typer
 from click.core import ParameterSource
 
 from .config import Settings
+from .llm import generate_conflict_patch
 from .merge_checks import merge_checks_command
 
 GITHUB_API = "https://api.github.com"
@@ -63,8 +65,28 @@ def _ensure_clean_worktree(repo: Path) -> None:
         raise typer.Exit(code=1)
 
 
-def _attempt_merge(repo: Path, base: str, strategy: MergeStrategy) -> bool:
-    """Try merging *base* into *repo* using *strategy*."""
+def _collect_conflict_diff(repo: Path) -> str | None:
+    """Return the conflicted diff after a failed merge attempt."""
+
+    diff = subprocess.run(
+        ["git", "--no-pager", "diff", "--diff-filter=U"],
+        cwd=repo,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if diff.returncode != 0:
+        message = diff.stderr.strip() or "git diff failed"
+        typer.echo(f"Warning: {message}", err=True)
+        return None
+    output = diff.stdout.strip()
+    return output or None
+
+
+def _attempt_merge(
+    repo: Path, base: str, strategy: MergeStrategy
+) -> tuple[bool, str | None]:
+    """Try merging *base* into *repo* using *strategy* and capture conflicts."""
 
     typer.echo(f"Attempting merge with strategy '{strategy.value}' from {base}…")
     result = subprocess.run(
@@ -72,12 +94,13 @@ def _attempt_merge(repo: Path, base: str, strategy: MergeStrategy) -> bool:
         cwd=repo,
     )
     if result.returncode == 0:
-        return True
+        return True, None
 
     typer.echo(
         f"Merge with strategy '{strategy.value}' failed (exit code {result.returncode}).",
         err=True,
     )
+    conflict_diff = _collect_conflict_diff(repo)
     abort = subprocess.run(["git", "merge", "--abort"], cwd=repo)
     if abort.returncode != 0:
         typer.echo(
@@ -85,7 +108,26 @@ def _attempt_merge(repo: Path, base: str, strategy: MergeStrategy) -> bool:
             err=True,
         )
         raise typer.Exit(code=abort.returncode or 1)
-    return False
+    return False, conflict_diff
+
+
+def _generate_patch_suggestion(diff: str, settings: Settings) -> str | None:
+    """Return an LLM-generated patch suggestion for merge conflicts."""
+
+    if not diff.strip():
+        return None
+
+    if not (settings.openai_api_key or settings.anthropic_api_key):
+        return None
+
+    try:
+        return asyncio.run(generate_conflict_patch(diff, settings))
+    except RuntimeError as exc:
+        # ``asyncio.run`` raises RuntimeError when nested inside a loop
+        typer.echo(f"Warning: Could not generate patch suggestion: {exc}", err=True)
+    except Exception as exc:  # pragma: no cover - defensive guard
+        typer.echo(f"Warning: Patch suggestion failed: {exc}", err=True)
+    return None
 
 
 def _parse_pr_identifier(pr_value: str) -> tuple[int, str | None, str | None]:
@@ -287,7 +329,7 @@ def merge_resolve_command(
     pr_number: int | None = None
     owner: str | None = None
     repo_name: str | None = None
-    settings: Settings | None = None
+    settings = Settings()
 
     if pr:
         try:
@@ -303,7 +345,6 @@ def merge_resolve_command(
                 typer.echo(str(exc), err=True)
                 raise typer.Exit(code=1) from exc
 
-        settings = Settings()
         base_ref = _fetch_pr_base(owner, repo_name, pr_number, settings.github_token)
         branch = _checkout_pr_branch(repo, pr_number)
         typer.echo(f"Checked out PR #{pr_number} into '{branch}'.")
@@ -320,17 +361,42 @@ def merge_resolve_command(
     else:
         strategies = [strategy]
 
+    conflict_diffs: list[str] = []
     succeeded: MergeStrategy | None = None
     for current in strategies:
-        if _attempt_merge(repo, merge_base, current):
+        success, diff_text = _attempt_merge(repo, merge_base, current)
+        if success:
             succeeded = current
             break
+        if diff_text:
+            conflict_diffs.append(diff_text)
 
     if succeeded is None:
         typer.echo(
             "Automatic merge strategies failed. Manual intervention required.", err=True
         )
-        if pr_number is not None and owner and repo_name and settings is not None:
+        combined_diff = "\n\n".join(conflict_diffs)
+        if combined_diff:
+            typer.echo(
+                "Attempting to generate a patch suggestion using the configured LLM…"
+            )
+            patch = _generate_patch_suggestion(combined_diff, settings)
+            if patch:
+                typer.echo("Suggested patch (apply with `git apply`):")
+                typer.echo(patch)
+            else:
+                if settings.openai_api_key or settings.anthropic_api_key:
+                    typer.echo(
+                        "Failed to generate a patch suggestion automatically.",
+                        err=True,
+                    )
+                else:
+                    typer.echo(
+                        "Configure OPENAI_API_KEY or ANTHROPIC_API_KEY to enable "
+                        "automatic patch suggestions.",
+                        err=True,
+                    )
+        if pr_number is not None and owner and repo_name:
             _post_pr_comment(
                 owner,
                 repo_name,
@@ -350,7 +416,7 @@ def merge_resolve_command(
         try:
             merge_checks_command(files=None, repo=repo)
         except typer.Exit as exc:
-            if pr_number is not None and owner and repo_name and settings is not None:
+            if pr_number is not None and owner and repo_name:
                 exit_code = exc.exit_code if exc.exit_code is not None else 1
                 summary = (
                     "❌ `f2clipboard merge-resolve` completed automatically using the "
@@ -366,7 +432,7 @@ def merge_resolve_command(
                 )
             raise
         else:
-            if pr_number is not None and owner and repo_name and settings is not None:
+            if pr_number is not None and owner and repo_name:
                 summary = (
                     "✅ `f2clipboard merge-resolve` completed automatically using the "
                     f"`{succeeded.value}` strategy. Merge checks were executed successfully."
@@ -382,7 +448,7 @@ def merge_resolve_command(
         typer.echo(
             "Run `f2clipboard merge-checks` to validate the merge when convenient."
         )
-        if pr_number is not None and owner and repo_name and settings is not None:
+        if pr_number is not None and owner and repo_name:
             summary = (
                 "✅ `f2clipboard merge-resolve` completed automatically using the "
                 f"`{succeeded.value}` strategy. Remember to run validation checks before pushing."

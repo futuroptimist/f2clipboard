@@ -105,6 +105,8 @@ def test_merge_resolve_attempts_both_strategies(monkeypatch, tmp_path: Path) -> 
             return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
         if cmd[:5] == ["git", "merge", "--no-commit", "-X", "ours"]:
             return subprocess.CompletedProcess(cmd, 1, stdout="", stderr="conflict")
+        if cmd[:4] == ["git", "--no-pager", "diff", "--diff-filter=U"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="diff", stderr="")
         if cmd == ["git", "merge", "--abort"]:
             return subprocess.CompletedProcess(cmd, 0)
         if cmd[:5] == ["git", "merge", "--no-commit", "-X", "theirs"]:
@@ -180,6 +182,8 @@ def test_merge_resolve_fetches_pr_and_uses_base(monkeypatch, tmp_path: Path) -> 
             return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
         if cmd[:2] == ["git", "checkout"]:
             return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        if cmd[:4] == ["git", "--no-pager", "diff", "--diff-filter=U"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
         if cmd[:6] == ["git", "merge", "--no-commit", "-X", "ours", "origin/develop"]:
             return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
         if cmd[:2] == ["git", "merge"] and cmd[1] == "--abort":
@@ -194,6 +198,10 @@ def test_merge_resolve_fetches_pr_and_uses_base(monkeypatch, tmp_path: Path) -> 
 
     class DummySettings:
         github_token = "token"
+        openai_api_key = None
+        anthropic_api_key = None
+        openai_model = "gpt-3.5-turbo"
+        anthropic_model = "claude-3-haiku-20240307"
 
         def __init__(self) -> None:  # pragma: no cover - nothing to do
             return
@@ -245,6 +253,8 @@ def test_merge_resolve_pr_respects_explicit_base(monkeypatch, tmp_path: Path) ->
             return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
         if cmd[:2] == ["git", "checkout"]:
             return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        if cmd[:4] == ["git", "--no-pager", "diff", "--diff-filter=U"]:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
         if cmd[:6] == ["git", "merge", "--no-commit", "-X", "ours", "feature-base"]:
             return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
         if cmd[:2] == ["git", "merge"] and cmd[1] == "--abort":
@@ -259,6 +269,10 @@ def test_merge_resolve_pr_respects_explicit_base(monkeypatch, tmp_path: Path) ->
 
     class DummySettings:
         github_token = "token"
+        openai_api_key = None
+        anthropic_api_key = None
+        openai_model = "gpt-3.5-turbo"
+        anthropic_model = "claude-3-haiku-20240307"
 
         def __init__(self) -> None:  # pragma: no cover - nothing to do
             return
@@ -312,7 +326,7 @@ def test_merge_resolve_posts_success_comment(monkeypatch, tmp_path: Path) -> Non
     def fake_attempt(repo: Path, base: str, strategy):
         attempted["base"] = base
         attempted["strategy"] = strategy.value
-        return True
+        return True, None
 
     monkeypatch.setattr("f2clipboard.merge_resolve._attempt_merge", fake_attempt)
 
@@ -340,6 +354,10 @@ def test_merge_resolve_posts_success_comment(monkeypatch, tmp_path: Path) -> Non
 
     class DummySettings:
         github_token = "token"
+        openai_api_key = None
+        anthropic_api_key = None
+        openai_model = "gpt-3.5-turbo"
+        anthropic_model = "claude-3-haiku-20240307"
 
         def __init__(self) -> None:
             return
@@ -391,7 +409,8 @@ def test_merge_resolve_posts_failure_comment(monkeypatch, tmp_path: Path) -> Non
     )
 
     monkeypatch.setattr(
-        "f2clipboard.merge_resolve._attempt_merge", lambda repo, base, strategy: False
+        "f2clipboard.merge_resolve._attempt_merge",
+        lambda repo, base, strategy: (False, "conflict diff"),
     )
 
     posted: dict[str, object] = {}
@@ -409,6 +428,10 @@ def test_merge_resolve_posts_failure_comment(monkeypatch, tmp_path: Path) -> Non
 
     class DummySettings:
         github_token = "token"
+        openai_api_key = None
+        anthropic_api_key = None
+        openai_model = "gpt-3.5-turbo"
+        anthropic_model = "claude-3-haiku-20240307"
 
         def __init__(self) -> None:
             return
@@ -438,6 +461,94 @@ def test_merge_resolve_posts_failure_comment(monkeypatch, tmp_path: Path) -> Non
             "Manual conflict resolution is required."
         ),
     }
+
+
+def test_merge_resolve_generates_patch_suggestion(monkeypatch, tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._ensure_clean_worktree", lambda repo: None
+    )
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._attempt_merge",
+        lambda repo, base, strategy: (False, "conflict diff"),
+    )
+
+    recorded: dict[str, str] = {}
+
+    def fake_suggestion(diff: str, settings) -> str:
+        recorded["diff"] = diff
+        return "PATCH"
+
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._generate_patch_suggestion", fake_suggestion
+    )
+
+    class DummySettings:
+        github_token = None
+        openai_api_key = "key"
+        anthropic_api_key = None
+        openai_model = "gpt-4o-mini"
+        anthropic_model = "claude-3-haiku-20240307"
+
+        def __init__(self) -> None:
+            return
+
+    monkeypatch.setattr("f2clipboard.merge_resolve.Settings", DummySettings)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        f2clipboard.app,
+        ["merge-resolve", "--repo", str(repo), "--base", "main", "--strategy", "ours"],
+    )
+
+    assert result.exit_code == 1
+    assert recorded["diff"] == "conflict diff"
+    assert "Suggested patch (apply with `git apply`):" in result.stdout
+    assert "PATCH" in result.stdout
+
+
+def test_merge_resolve_warns_when_patch_generation_fails(
+    monkeypatch, tmp_path: Path
+) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._ensure_clean_worktree", lambda repo: None
+    )
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._attempt_merge",
+        lambda repo, base, strategy: (False, "conflict diff"),
+    )
+
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._generate_patch_suggestion",
+        lambda diff, settings: None,
+    )
+
+    class DummySettings:
+        github_token = None
+        openai_api_key = "key"
+        anthropic_api_key = None
+        openai_model = "gpt-4o-mini"
+        anthropic_model = "claude-3-haiku-20240307"
+
+        def __init__(self) -> None:
+            return
+
+    monkeypatch.setattr("f2clipboard.merge_resolve.Settings", DummySettings)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        f2clipboard.app,
+        ["merge-resolve", "--repo", str(repo), "--base", "main", "--strategy", "ours"],
+    )
+
+    assert result.exit_code == 1
+    combined_output = result.stdout + result.stderr
+    assert "Failed to generate a patch suggestion automatically." in combined_output
 
 
 def test_post_pr_comment_requires_token(monkeypatch, capsys) -> None:
