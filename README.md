@@ -253,7 +253,9 @@ The command fetches the PR's head (`pull/<number>/head`), checks it out into a
 local `pr-<number>` branch, looks up the base branch from the GitHub API, and
 then attempts the requested merge strategy (or both). It also ensures the
 working tree is clean and by default runs `f2clipboard merge-checks` after a
-successful merge. Pass `--no-run-checks` to skip automated validation, use
+successful merge. When `--pr` is provided and `GITHUB_TOKEN` is configured the
+tool also posts a summary comment to the pull request describing the outcome.
+Pass `--no-run-checks` to skip automated validation, use
 `--strategy ours`/`--strategy theirs` to attempt a single strategy, or override
 the merge base with `--base`.
 

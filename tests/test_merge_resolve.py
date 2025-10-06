@@ -289,3 +289,171 @@ def test_merge_resolve_pr_respects_explicit_base(monkeypatch, tmp_path: Path) ->
         call[:6] == ["git", "merge", "--no-commit", "-X", "ours", "feature-base"]
         for call in commands
     )
+
+
+def test_merge_resolve_posts_success_comment(monkeypatch, tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._ensure_clean_worktree", lambda repo: None
+    )
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._fetch_pr_base",
+        lambda owner, repo, number, token: "main",
+    )
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._checkout_pr_branch",
+        lambda repo, number: f"pr-{number}",
+    )
+
+    attempted: dict[str, object] = {}
+
+    def fake_attempt(repo: Path, base: str, strategy):
+        attempted["base"] = base
+        attempted["strategy"] = strategy.value
+        return True
+
+    monkeypatch.setattr("f2clipboard.merge_resolve._attempt_merge", fake_attempt)
+
+    checks: dict[str, Path] = {}
+
+    def fake_merge_checks(*, files, repo: Path) -> None:
+        checks["repo"] = repo
+
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve.merge_checks_command", fake_merge_checks
+    )
+
+    posted: dict[str, object] = {}
+
+    def fake_post(
+        owner: str, repo: str, number: int, token: str | None, body: str
+    ) -> None:
+        posted["owner"] = owner
+        posted["repo"] = repo
+        posted["number"] = number
+        posted["token"] = token
+        posted["body"] = body
+
+    monkeypatch.setattr("f2clipboard.merge_resolve._post_pr_comment", fake_post)
+
+    class DummySettings:
+        github_token = "token"
+
+        def __init__(self) -> None:
+            return
+
+    monkeypatch.setattr("f2clipboard.merge_resolve.Settings", DummySettings)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        f2clipboard.app,
+        [
+            "merge-resolve",
+            "--repo",
+            str(repo),
+            "--pr",
+            "https://github.com/example/repo/pull/42",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert attempted["base"] == "origin/main"
+    assert attempted["strategy"] == "ours"
+    assert checks["repo"] == repo.resolve()
+    assert posted == {
+        "owner": "example",
+        "repo": "repo",
+        "number": 42,
+        "token": "token",
+        "body": (
+            "✅ `f2clipboard merge-resolve` completed automatically using the `ours` strategy. "
+            "Merge checks were executed successfully."
+        ),
+    }
+
+
+def test_merge_resolve_posts_failure_comment(monkeypatch, tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._ensure_clean_worktree", lambda repo: None
+    )
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._fetch_pr_base",
+        lambda owner, repo, number, token: "main",
+    )
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._checkout_pr_branch",
+        lambda repo, number: f"pr-{number}",
+    )
+
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._attempt_merge", lambda repo, base, strategy: False
+    )
+
+    posted: dict[str, object] = {}
+
+    def fake_post(
+        owner: str, repo: str, number: int, token: str | None, body: str
+    ) -> None:
+        posted["owner"] = owner
+        posted["repo"] = repo
+        posted["number"] = number
+        posted["token"] = token
+        posted["body"] = body
+
+    monkeypatch.setattr("f2clipboard.merge_resolve._post_pr_comment", fake_post)
+
+    class DummySettings:
+        github_token = "token"
+
+        def __init__(self) -> None:
+            return
+
+    monkeypatch.setattr("f2clipboard.merge_resolve.Settings", DummySettings)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        f2clipboard.app,
+        [
+            "merge-resolve",
+            "--repo",
+            str(repo),
+            "--pr",
+            "https://github.com/example/repo/pull/42",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert posted == {
+        "owner": "example",
+        "repo": "repo",
+        "number": 42,
+        "token": "token",
+        "body": (
+            "⚠️ `f2clipboard merge-resolve` could not resolve the merge automatically. "
+            "Manual conflict resolution is required."
+        ),
+    }
+
+
+def test_post_pr_comment_requires_token(monkeypatch, capsys) -> None:
+    called = False
+
+    def fake_httpx_post(*args, **kwargs):
+        nonlocal called
+        called = True
+        raise AssertionError("HTTP call should not be made without a token")
+
+    monkeypatch.setattr("f2clipboard.merge_resolve.httpx.post", fake_httpx_post)
+
+    f2clipboard.merge_resolve._post_pr_comment(
+        "owner", "repo", 1, token="", body="hello"
+    )
+
+    captured = capsys.readouterr()
+    assert "Skipping PR comment" in captured.err
+    assert called is False
