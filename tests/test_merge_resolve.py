@@ -392,6 +392,97 @@ def test_merge_resolve_posts_success_comment(monkeypatch, tmp_path: Path) -> Non
     }
 
 
+def test_merge_resolve_posts_success_comment_with_patch(
+    monkeypatch, tmp_path: Path
+) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._ensure_clean_worktree", lambda repo: None
+    )
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._fetch_pr_base",
+        lambda owner, repo, number, token: "main",
+    )
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._checkout_pr_branch",
+        lambda repo, number: f"pr-{number}",
+    )
+
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._attempt_merge",
+        lambda repo, base, strategy: (False, "conflict diff"),
+    )
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._generate_patch_suggestion",
+        lambda diff, settings: "PATCH",
+    )
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._apply_patch_suggestion",
+        lambda repo, base, strategy, patch: (True, True),
+    )
+
+    checks: dict[str, Path] = {}
+
+    def fake_merge_checks(*, files, repo: Path) -> None:
+        checks["repo"] = repo
+
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve.merge_checks_command", fake_merge_checks
+    )
+
+    posted: dict[str, object] = {}
+
+    def fake_post(
+        owner: str, repo: str, number: int, token: str | None, body: str
+    ) -> None:
+        posted["owner"] = owner
+        posted["repo"] = repo
+        posted["number"] = number
+        posted["token"] = token
+        posted["body"] = body
+
+    monkeypatch.setattr("f2clipboard.merge_resolve._post_pr_comment", fake_post)
+
+    class DummySettings:
+        github_token = "token"
+        openai_api_key = "key"
+        anthropic_api_key = None
+        openai_model = "gpt-4o-mini"
+        anthropic_model = "claude-3-haiku-20240307"
+
+        def __init__(self) -> None:
+            return
+
+    monkeypatch.setattr("f2clipboard.merge_resolve.Settings", DummySettings)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        f2clipboard.app,
+        [
+            "merge-resolve",
+            "--repo",
+            str(repo),
+            "--pr",
+            "https://github.com/example/repo/pull/42",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert checks["repo"] == repo.resolve()
+    assert posted == {
+        "owner": "example",
+        "repo": "repo",
+        "number": 42,
+        "token": "token",
+        "body": (
+            "✅ `f2clipboard merge-resolve` completed automatically using the `ours` strategy "
+            "after applying the LLM-generated patch suggestion. Merge checks were executed successfully."
+        ),
+    }
+
+
 def test_merge_resolve_posts_failure_comment(monkeypatch, tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -463,7 +554,90 @@ def test_merge_resolve_posts_failure_comment(monkeypatch, tmp_path: Path) -> Non
     }
 
 
-def test_merge_resolve_generates_patch_suggestion(monkeypatch, tmp_path: Path) -> None:
+def test_merge_resolve_posts_failure_comment_when_patch_fails(
+    monkeypatch, tmp_path: Path
+) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._ensure_clean_worktree", lambda repo: None
+    )
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._fetch_pr_base",
+        lambda owner, repo, number, token: "main",
+    )
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._checkout_pr_branch",
+        lambda repo, number: f"pr-{number}",
+    )
+
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._attempt_merge",
+        lambda repo, base, strategy: (False, "conflict diff"),
+    )
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._generate_patch_suggestion",
+        lambda diff, settings: "PATCH",
+    )
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._apply_patch_suggestion",
+        lambda repo, base, strategy, patch: (False, False),
+    )
+
+    posted: dict[str, object] = {}
+
+    def fake_post(
+        owner: str, repo: str, number: int, token: str | None, body: str
+    ) -> None:
+        posted["owner"] = owner
+        posted["repo"] = repo
+        posted["number"] = number
+        posted["token"] = token
+        posted["body"] = body
+
+    monkeypatch.setattr("f2clipboard.merge_resolve._post_pr_comment", fake_post)
+
+    class DummySettings:
+        github_token = "token"
+        openai_api_key = "key"
+        anthropic_api_key = None
+        openai_model = "gpt-4o-mini"
+        anthropic_model = "claude-3-haiku-20240307"
+
+        def __init__(self) -> None:
+            return
+
+    monkeypatch.setattr("f2clipboard.merge_resolve.Settings", DummySettings)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        f2clipboard.app,
+        [
+            "merge-resolve",
+            "--repo",
+            str(repo),
+            "--pr",
+            "https://github.com/example/repo/pull/42",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert posted == {
+        "owner": "example",
+        "repo": "repo",
+        "number": 42,
+        "token": "token",
+        "body": (
+            "⚠️ `f2clipboard merge-resolve` could not resolve the merge automatically. "
+            "Manual conflict resolution is required. Automatic patch application did not succeed."
+        ),
+    }
+
+
+def test_merge_resolve_prints_patch_when_application_fails(
+    monkeypatch, tmp_path: Path
+) -> None:
     repo = tmp_path / "repo"
     repo.mkdir()
 
@@ -483,6 +657,11 @@ def test_merge_resolve_generates_patch_suggestion(monkeypatch, tmp_path: Path) -
 
     monkeypatch.setattr(
         "f2clipboard.merge_resolve._generate_patch_suggestion", fake_suggestion
+    )
+
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._apply_patch_suggestion",
+        lambda repo, base, strategy, patch: (False, False),
     )
 
     class DummySettings:
@@ -507,6 +686,76 @@ def test_merge_resolve_generates_patch_suggestion(monkeypatch, tmp_path: Path) -
     assert recorded["diff"] == "conflict diff"
     assert "Suggested patch (apply with `git apply`):" in result.stdout
     assert "PATCH" in result.stdout
+
+
+def test_merge_resolve_applies_patch_and_runs_checks(
+    monkeypatch, tmp_path: Path
+) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._ensure_clean_worktree", lambda repo: None
+    )
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._attempt_merge",
+        lambda repo, base, strategy: (False, "conflict diff"),
+    )
+
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve._generate_patch_suggestion",
+        lambda diff, settings: "PATCH",
+    )
+
+    applied: dict[str, object] = {}
+
+    def fake_apply(repo_path, base: str, strategy, patch: str) -> tuple[bool, bool]:
+        applied["repo"] = repo_path
+        applied["base"] = base
+        applied["strategy"] = strategy
+        applied["patch"] = patch
+        return True, True
+
+    monkeypatch.setattr("f2clipboard.merge_resolve._apply_patch_suggestion", fake_apply)
+
+    checks: dict[str, Path] = {}
+
+    def fake_merge_checks(*, files, repo: Path) -> None:
+        checks["repo"] = repo
+
+    monkeypatch.setattr(
+        "f2clipboard.merge_resolve.merge_checks_command", fake_merge_checks
+    )
+
+    class DummySettings:
+        github_token = None
+        openai_api_key = "key"
+        anthropic_api_key = None
+        openai_model = "gpt-4o-mini"
+        anthropic_model = "claude-3-haiku-20240307"
+
+        def __init__(self) -> None:
+            return
+
+    monkeypatch.setattr("f2clipboard.merge_resolve.Settings", DummySettings)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        f2clipboard.app,
+        ["merge-resolve", "--repo", str(repo), "--base", "main", "--strategy", "ours"],
+    )
+
+    assert result.exit_code == 0
+    assert applied["repo"] == repo.resolve()
+    assert applied["base"] == "main"
+    assert applied["strategy"].value == "ours"
+    assert applied["patch"] == "PATCH"
+    assert checks["repo"] == repo.resolve()
+    assert (
+        "Conflicts were resolved by applying the suggested patch automatically."
+        in result.stdout
+    )
+    assert "Suggested patch (apply with `git apply`):" not in result.stdout
 
 
 def test_merge_resolve_warns_when_patch_generation_fails(

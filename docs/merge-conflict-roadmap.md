@@ -16,5 +16,5 @@ This checklist captures the workflow for resolving merge conflicts in pull reque
 - [ ] If both strategies fail
   - [ ] Collect conflicting hunks: `git --no-pager diff --name-only --diff-filter=U`
   - [x] Use the Codex merge-conflicts prompt to generate a patch 💯
-  - [ ] Apply the patch and rerun checks
+  - [x] Apply the patch automatically and rerun checks
 - [x] Post a PR comment summarizing the outcome (strategy used or need for manual review)

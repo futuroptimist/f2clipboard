@@ -261,10 +261,12 @@ the merge base with `--base`.
 
 If all merge strategies fail, the command gathers the conflicting hunks and,
 when either `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` is configured, invokes the
-Codex merge-conflicts prompt to propose a unified diff. The suggested patch is
-printed to stdout so you can review or apply it with `git apply`. Without
-credentials the command reminds you to configure an API key for automatic patch
-generation.
+Codex merge-conflicts prompt to propose a unified diff. `merge-resolve` then
+retries the merge, applies the suggested patch automatically and stages the
+changes before running `f2clipboard merge-checks` (unless `--no-run-checks` is
+provided). If the patch cannot be applied it is printed so you can review or
+apply it manually. Without credentials the command reminds you to configure an
+API key for automatic patch generation.
 
 Run the standard checks after resolving conflicts:
 
