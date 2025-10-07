@@ -83,6 +83,98 @@ def _collect_conflict_diff(repo: Path) -> str | None:
     return output or None
 
 
+def _strip_patch_markers(patch: str) -> str:
+    """Remove Markdown fences from LLM supplied patches."""
+
+    text = patch.strip()
+    if not text:
+        return ""
+
+    lines = text.splitlines()
+    first = lines[0].strip()
+    match = re.match(r"^(```|~~~)", first)
+    if match:
+        fence = match.group(1)
+        lines = lines[1:]
+        while lines and not lines[-1].strip():
+            lines.pop()
+        if lines and lines[-1].strip().startswith(fence):
+            lines = lines[:-1]
+    cleaned = "\n".join(lines)
+    if cleaned and not cleaned.endswith("\n"):
+        cleaned += "\n"
+    return cleaned
+
+
+def _apply_patch_suggestion(
+    repo: Path, base: str, strategy: MergeStrategy, patch: str
+) -> tuple[bool, bool]:
+    """Attempt to re-run the merge and apply an LLM generated patch."""
+
+    cleaned_patch = _strip_patch_markers(patch)
+    if not cleaned_patch.strip():
+        typer.echo(
+            "Suggested patch was empty; skipping automatic application.",
+            err=True,
+        )
+        return False, False
+
+    typer.echo("Re-attempting merge to apply the suggested patch…")
+    retry = subprocess.run(
+        ["git", "merge", "--no-commit", "-X", strategy.value, base],
+        cwd=repo,
+    )
+    if retry.returncode == 0:
+        typer.echo("Merge succeeded on retry without needing the patch.")
+        return True, False
+
+    apply_proc = subprocess.run(
+        ["git", "apply", "--whitespace=nowarn"],
+        cwd=repo,
+        input=cleaned_patch,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if apply_proc.returncode != 0:
+        message = apply_proc.stderr.strip() or "git apply failed"
+        typer.echo(
+            f"Failed to apply suggested patch automatically: {message}",
+            err=True,
+        )
+        abort = subprocess.run(["git", "merge", "--abort"], cwd=repo)
+        if abort.returncode != 0:
+            typer.echo(
+                "Failed to abort merge automatically; resolve the repository state manually.",
+                err=True,
+            )
+        return False, False
+
+    stage = subprocess.run(
+        ["git", "add", "-A"],
+        cwd=repo,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if stage.returncode != 0:
+        message = stage.stderr.strip() or "git add failed"
+        typer.echo(
+            f"Failed to stage patched changes automatically: {message}",
+            err=True,
+        )
+        abort = subprocess.run(["git", "merge", "--abort"], cwd=repo)
+        if abort.returncode != 0:
+            typer.echo(
+                "Failed to abort merge automatically; resolve the repository state manually.",
+                err=True,
+            )
+        return False, False
+
+    typer.echo("Patch applied and staged successfully.")
+    return True, True
+
+
 def _attempt_merge(
     repo: Path, base: str, strategy: MergeStrategy
 ) -> tuple[bool, str | None]:
@@ -128,6 +220,43 @@ def _generate_patch_suggestion(diff: str, settings: Settings) -> str | None:
     except Exception as exc:  # pragma: no cover - defensive guard
         typer.echo(f"Warning: Patch suggestion failed: {exc}", err=True)
     return None
+
+
+def _success_summary(
+    strategy: MergeStrategy, patch_applied: bool, checks_ran: bool
+) -> str:
+    """Build a success summary message for PR comments."""
+
+    summary = (
+        "✅ `f2clipboard merge-resolve` completed automatically using the "
+        f"`{strategy.value}` strategy"
+    )
+    if patch_applied:
+        summary += " after applying the LLM-generated patch suggestion"
+    summary += ". "
+    if checks_ran:
+        summary += "Merge checks were executed successfully."
+    else:
+        summary += "Remember to run validation checks before pushing."
+    return summary
+
+
+def _failure_summary(
+    strategy: MergeStrategy, patch_applied: bool, exit_code: int
+) -> str:
+    """Build a failure summary message for PR comments."""
+
+    summary = (
+        "❌ `f2clipboard merge-resolve` completed automatically using the "
+        f"`{strategy.value}` strategy"
+    )
+    if patch_applied:
+        summary += " after applying the LLM-generated patch suggestion"
+    summary += (
+        f", but merge checks failed with exit code {exit_code}. "
+        "Please review the check output and address any issues."
+    )
+    return summary
 
 
 def _parse_pr_identifier(pr_value: str) -> tuple[int, str | None, str | None]:
@@ -363,7 +492,11 @@ def merge_resolve_command(
 
     conflict_diffs: list[str] = []
     succeeded: MergeStrategy | None = None
+    patch_applied = False
+    last_strategy_attempted = strategies[0]
+
     for current in strategies:
+        last_strategy_attempted = current
         success, diff_text = _attempt_merge(repo, merge_base, current)
         if success:
             succeeded = current
@@ -376,14 +509,31 @@ def merge_resolve_command(
             "Automatic merge strategies failed. Manual intervention required.", err=True
         )
         combined_diff = "\n\n".join(conflict_diffs)
+        patch_attempt_failed = False
         if combined_diff:
             typer.echo(
                 "Attempting to generate a patch suggestion using the configured LLM…"
             )
             patch = _generate_patch_suggestion(combined_diff, settings)
             if patch:
-                typer.echo("Suggested patch (apply with `git apply`):")
-                typer.echo(patch)
+                success, used_patch = _apply_patch_suggestion(
+                    repo, merge_base, last_strategy_attempted, patch
+                )
+                if success:
+                    succeeded = last_strategy_attempted
+                    patch_applied = used_patch
+                    if used_patch:
+                        typer.echo(
+                            "Conflicts resolved by applying the suggested patch automatically."
+                        )
+                    else:
+                        typer.echo(
+                            "Conflicts resolved after retrying the merge without using the patch."
+                        )
+                else:
+                    patch_attempt_failed = True
+                    typer.echo("Suggested patch (apply with `git apply`):")
+                    typer.echo(patch)
             else:
                 if settings.openai_api_key or settings.anthropic_api_key:
                     typer.echo(
@@ -396,18 +546,28 @@ def merge_resolve_command(
                         "automatic patch suggestions.",
                         err=True,
                     )
-        if pr_number is not None and owner and repo_name:
-            _post_pr_comment(
-                owner,
-                repo_name,
-                pr_number,
-                settings.github_token,
-                "⚠️ `f2clipboard merge-resolve` could not resolve the merge automatically. "
-                "Manual conflict resolution is required.",
-            )
-        raise typer.Exit(code=1)
+        if succeeded is None:
+            if pr_number is not None and owner and repo_name:
+                message = (
+                    "⚠️ `f2clipboard merge-resolve` could not resolve the merge automatically. "
+                    "Manual conflict resolution is required."
+                )
+                if patch_attempt_failed:
+                    message += " Automatic patch application did not succeed."
+                _post_pr_comment(
+                    owner,
+                    repo_name,
+                    pr_number,
+                    settings.github_token,
+                    message,
+                )
+            raise typer.Exit(code=1)
 
     typer.echo(f"Merge completed using strategy '{succeeded.value}'.")
+    if patch_applied:
+        typer.echo(
+            "Conflicts were resolved by applying the suggested patch automatically."
+        )
     typer.echo(
         "Review the changes, resolve any remaining issues and commit when ready."
     )
@@ -418,11 +578,7 @@ def merge_resolve_command(
         except typer.Exit as exc:
             if pr_number is not None and owner and repo_name:
                 exit_code = exc.exit_code if exc.exit_code is not None else 1
-                summary = (
-                    "❌ `f2clipboard merge-resolve` completed automatically using the "
-                    f"`{succeeded.value}` strategy, but merge checks failed with exit code "
-                    f"{exit_code}. Please review the check output and address any issues."
-                )
+                summary = _failure_summary(succeeded, patch_applied, exit_code)
                 _post_pr_comment(
                     owner,
                     repo_name,
@@ -433,10 +589,7 @@ def merge_resolve_command(
             raise
         else:
             if pr_number is not None and owner and repo_name:
-                summary = (
-                    "✅ `f2clipboard merge-resolve` completed automatically using the "
-                    f"`{succeeded.value}` strategy. Merge checks were executed successfully."
-                )
+                summary = _success_summary(succeeded, patch_applied, True)
                 _post_pr_comment(
                     owner,
                     repo_name,
@@ -449,10 +602,7 @@ def merge_resolve_command(
             "Run `f2clipboard merge-checks` to validate the merge when convenient."
         )
         if pr_number is not None and owner and repo_name:
-            summary = (
-                "✅ `f2clipboard merge-resolve` completed automatically using the "
-                f"`{succeeded.value}` strategy. Remember to run validation checks before pushing."
-            )
+            summary = _success_summary(succeeded, patch_applied, False)
             _post_pr_comment(
                 owner,
                 repo_name,
