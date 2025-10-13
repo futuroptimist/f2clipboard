@@ -1,9 +1,9 @@
 ---
-title: 'Codex CI-Failure Fix Prompt'
-slug: 'prompts-codex-ci-fix'
+title: 'Codex CI Failure Fix Prompt'
+slug: 'codex-ci-fix'
 ---
 
-# Codex CI-Failure Fix Prompt
+# Codex CI Failure Fix Prompt
 Type: evergreen
 
 Use this prompt to investigate and resolve continuous integration failures in *f2clipboard*.
@@ -16,7 +16,7 @@ PURPOSE:
 Diagnose and fix CI failures so all checks pass.
 
 CONTEXT:
-- Follow instructions in AGENTS.md.
+- Follow instructions in [AGENTS.md](../../../AGENTS.md).
 - Run `pre-commit run --all-files` and `pytest -q`.
 - Install dependencies with `uv pip install --system -e .[dev]` if needed.
 
