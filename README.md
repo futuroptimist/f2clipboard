@@ -395,4 +395,4 @@ and copied to your clipboard.
 
 ## Contributing
 
-See [AGENTS.md](AGENTS.md) for LLM-specific guidelines and [CONTRIBUTING.md](CONTRIBUTING.md) for the standard contribution workflow. Prompt templates live in [docs/prompts/codex/prompts-codex.md](docs/prompts/codex/prompts-codex.md).
+See [AGENTS.md](AGENTS.md) for LLM-specific guidelines and [CONTRIBUTING.md](CONTRIBUTING.md) for the standard contribution workflow. Prompt templates live in [docs/prompts/codex/overview.md](docs/prompts/codex/overview.md).

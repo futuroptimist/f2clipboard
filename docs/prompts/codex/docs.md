@@ -1,6 +1,6 @@
 ---
 title: 'Codex Docs Update Prompt'
-slug: 'prompts-codex-docs'
+slug: 'codex-docs-update'
 ---
 
 # Codex Docs Update Prompt
@@ -16,7 +16,7 @@ GOAL:
 Improve documentation accuracy, links, or readability.
 
 CONTEXT:
-- Follow AGENTS.md instructions.
+- Follow [AGENTS.md](../../../AGENTS.md).
 - Run `pre-commit run --files <modified_docs>`.
 
 REQUEST:
