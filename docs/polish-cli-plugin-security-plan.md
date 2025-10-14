@@ -3,135 +3,134 @@
 ## 1. Snapshot
 
 ### Active CLI entry points
-- `f2clipboard.cli:app` – Typer root that registers the current subcommands: `codex-task`,
-  `chat2prompt`, `files`, `merge-checks`, `merge-resolve`, and `plugins`. Global flag surface is
-  limited to `--version` via the callback.
-- Legacy `f2clipboard.py` – argparse shim that powers the Typer `files` command by proxy. It exposes
-  `--dir`, `--pattern`, `--include`, `--exclude`, `--dry-run`, `--all`, `--output`, and `--max-size`.
-  Help text highlights Markdown clipboard export and interactive selection.
-- Helper flows inside the package:
-  - `f2clipboard.codex_task` (`codex-task` command): takes a positional Codex task URL plus
+- `f2clipboard.cli:app` – Typer root that wires the shipped subcommands: `codex-task`, `chat2prompt`,
+  `files`, `merge-checks`, `merge-resolve`, and `plugins`. The callback only exposes the global
+  `--version` switch today, so every new top-level flag must be registered explicitly.
+- Legacy `f2clipboard.py` – argparse shim invoked by the `files` command. It accepts `--dir`,
+  `--pattern`, multiple `--include/--exclude`, `--max-size`, `--dry-run`, `--all`, and `--output`.
+  Help text emphasises Markdown clipboard export and interactive selection.
+- Helper flows surfaced through Typer:
+  - `f2clipboard.codex_task` (`codex-task` command): positional Codex task URL plus
     `--clipboard/--no-clipboard`, `--log-size-threshold`, `--openai-model`, and `--anthropic-model`
     overrides.
   - `f2clipboard.files` (`files` command wrapper): Typer-facing options mirror the legacy parser but
-    rely on `--dry-run`/`--output` instead of a `--no-clipboard` toggle. This is the primary parity
-    gap versus `codex-task`, which presents an explicit clipboard flag pair in its help output.
-  - `f2clipboard.chat2prompt`, `merge_checks`, and `merge_resolve` surface additional flows that are
-    callable via the Typer root yet not part of the original legacy shim.
+    favour `--dry-run`/`--output` without exposing a `--clipboard` toggle. This is the visible parity
+    gap versus `codex-task`, whose help output explicitly offers clipboard opt-out.
+  - `f2clipboard.chat2prompt`, `merge_checks`, and `merge_resolve` remain callable via
+    `f2clipboard.cli:app` yet never existed on the argparse shim.
 
 ### Planned plugin interface (`f2clipboard.plugins`)
-- Discovery performed through Python entry points named `f2clipboard.plugins`; each entry provides a
-  module-level factory returning a plugin object.
-- Expected hooks:
-  - `register_cli(app: typer.Typer)` – add commands/flags to the shared Typer application without
-    mutating global state outside the provided handle.
-  - `provide_clipboard(settings: Settings) -> ClipboardProvider` – optionally expose clipboard
-    backends or enrich existing providers.
-  - Optional lifecycle hooks (`configure(settings)`, `shutdown()`) to give plugins structured
-    extension points.
-- Configuration injection: the core app instantiates a `Settings` object and passes immutable views
-  into hooks. Plugin-specific config is drawn from `[tool.f2clipboard.plugins.<name>]` in
-  `pyproject.toml` or namespaced environment variables and delivered as keyword arguments by the
-  registry.
+- Discovery: standard Python entry points registered under the `f2clipboard.plugins` group point to
+  modules inside the `f2clipboard.plugins` namespace. The loader instantiates a registry that imports
+  each entry lazily and records metadata (distribution, version, path).
+- Expected hooks exposed by every plugin module:
+  - `register_cli(app: typer.Typer) -> None` – receive the shared Typer app to append commands and
+    options without mutating unrelated globals.
+  - `provide_clipboard(settings: Settings) -> ClipboardProvider | None` – optionally supply a
+    clipboard backend; returning `None` signals no contribution.
+  - Optional lifecycle hooks such as `configure(settings)` and `shutdown()` give structured entry and
+    exit points without requiring subclass hierarchies.
+- Configuration injection: the registry constructs a `Settings` instance once, then passes
+  read-only views plus plugin-specific keyword arguments sourced from `[tool.f2clipboard.plugins]`
+  sections in `pyproject.toml` or environment variables following the `F2CLIPBOARD_PLUGIN_<NAME>__`
+  prefix. Plugins must tolerate missing keys and degrade gracefully.
 - Isolation guardrails:
-  - Plugins execute inside try/except wrappers; failures raise `PluginLoadError` without crashing the
-    CLI.
-  - Each plugin runs with a dedicated logger carrying the plugin name and redaction filters.
-  - Clipboard providers supplied by plugins are wrapped in sandbox adapters that enforce timeouts and
-    resource limits before the core command consumes them.
+  - Entry loading wrapped in `try/except`, converting failures into `PluginLoadError` records while
+    continuing boot.
+  - Per-plugin loggers pre-configured with the central redaction filter to prevent leakage.
+  - Clipboard providers executed through timeout-aware adapters so one misbehaving plugin cannot hang
+    the CLI.
 
 ### Token usage map
 - `GITHUB_TOKEN`
-  - Consumed by `f2clipboard.codex_task` when calling the REST API for check runs and by
-    `f2clipboard.merge_resolve` to fetch PR metadata and post summary comments.
-  - Must be explicitly opted in via environment or `.env`; absent tokens skip authenticated calls and
-    emit warnings instead of failing.
+  - Consumed by `f2clipboard.codex_task` when calling the GitHub REST API for PR check runs and by
+    `f2clipboard.merge_resolve` when fetching metadata or posting summaries. Absent tokens downgrade
+    to unauthenticated requests with warning banners instead of fatal exits.
 - `OPENAI_API_KEY` / `OPENAI_MODEL`
-  - Read by `f2clipboard.config.Settings` and used inside `f2clipboard.llm` for log summarisation,
-    merge-conflict patch suggestions, and Jira plugin summaries.
-  - `merge_resolve` also inspects the key to decide whether to attempt automated conflict patches.
-  - Disabled by default; behaviour gracefully falls back to truncation when the key is missing.
+  - Parsed by `f2clipboard.config.Settings` and used inside `f2clipboard.llm` for log summaries,
+    merge-conflict patch suggestions, and Jira plugin output. `merge_resolve` gates its automated
+    patch flow on this configuration.
 - `ANTHROPIC_API_KEY` / `ANTHROPIC_MODEL`
-  - Mirror the OpenAI usage across `Settings`, `llm`, and `merge_resolve` as an alternative LLM.
-  - Plugins can rely on the same config surface; they must tolerate `None` keys and skip remote
-    requests unless the user opts in.
+  - Parallel to the OpenAI flow across `Settings`, `llm`, and `merge_resolve`, acting as a drop-in
+    alternative when Anthropic access is configured.
+- Opt-in expectations: tokens are only read when present in the environment or `.env`; tests and
+  runtime paths must treat `None` as the default state and prefer truncation/logging fallbacks.
 
 ### Testing & coverage posture
-- Current baseline: `pytest -q` runs the unit suite (CLI invocations, Codex workflow, plugins, merge
-  utilities, and secret redaction).
-- Target posture: instrument `pytest --cov=f2clipboard --cov-report=term-missing` and wire coverage
-  upload into CI once the core refactors land.
-- High-value smoke suites to keep green:
-  - CLI invocation matrix covering `codex-task`, `files`, `merge-checks`, `merge-resolve`, and future
+- Current baseline: `pytest -q` covers CLI invocation smoke tests, Codex workflow helpers, plugin
+  registry behaviour, merge utilities, and redaction helpers.
+- Target posture: `pytest --cov=f2clipboard --cov-report=term-missing` once coverage instrumentation
+  is wired into CI.
+- Highest-value smoke suites:
+  - CLI invocation matrix spanning `codex-task`, `files`, `merge-checks`, `merge-resolve`, and future
     plugin commands.
-  - Plugin discovery and failure-handling tests ensuring registry resilience.
-  - Clipboard provider contract checks (system tools mocked or skipped when binaries are missing).
+  - Plugin discovery and failure-handling tests validating registry resilience.
+  - Clipboard provider contract checks that skip gracefully when system binaries are absent.
 
 ## 2. Refactors
 
 ### Package layout split
-- Relocate Typer bootstrap code to `f2clipboard/cli/__init__.py` exporting `app` and
-  `main(argv: list[str] | None)`. Keep command modules as siblings under `f2clipboard/cli/commands/`
-  to clarify boundaries.
-- Move shared logic (GitHub clients, HTML parsing, LLM orchestration, redaction utilities) into
-  `f2clipboard/core/` modules, enabling reuse across CLI and plugins.
-- House optional integrations under `f2clipboard/plugins/<name>/` with a thin registry orchestrating
-  entry-point loading, metadata (version/path), and optional capability flags.
+- Relocate Typer bootstrap code to `f2clipboard/cli/__init__.py`, exporting `app` and
+  `main(argv: list[str] | None)`. Organise command modules under `f2clipboard/cli/commands/` for
+  clearer ownership boundaries.
+- Move reusable logic (GitHub clients, HTML parsing, LLM orchestration, redaction utilities) into
+  `f2clipboard/core/` modules to decouple CLI glue from domain behaviour.
+- Host optional integrations under `f2clipboard/plugins/<name>/` with a light-weight registry that
+  surfaces discovery metadata and injects lifecycle hooks.
 
 ### Clipboard provider protocol
-- Define `ClipboardProvider` in `f2clipboard/core/clipboard.py` with:
+- Introduce `ClipboardProvider` in `f2clipboard/core/clipboard.py` with:
   - `read() -> str` and `write(markdown: str) -> None` methods.
-  - Capability flags (`supports_rich_text`, `supports_files`) exposed as properties or attributes.
+  - Capability flags (e.g., `supports_rich_text`, `supports_files`) advertised as read-only
+    properties.
 - Backend implementations:
-  1. Darwin: shell out to `pbcopy`/`pbpaste`.
-  2. X11: use `xclip -selection clipboard`.
-  3. Wayland: fall back to `wl-copy`/`wl-paste`.
-  4. Windows: wrap `ctypes` `OpenClipboard`/`SetClipboardData` or `pyperclip` with Windows backend.
-  5. Pure-Python fallback leveraging `pyperclip` with in-memory store for headless environments.
-- Resolution strategy: detect OS, probe availability of system binaries, then cascade through the
-  provider list until one succeeds; cache the winning provider per session.
-- Smoke tests: mark platform-specific tests with `pytest.mark.skipif` when commands or OS support are
-  absent; add fallback-only tests to ensure default behaviour remains stable.
+  1. Darwin – shell out to `pbcopy`/`pbpaste`.
+  2. X11 – call `xclip -selection clipboard`.
+  3. Wayland – rely on `wl-copy`/`wl-paste`.
+  4. Windows – wrap `ctypes` clipboard calls or delegate to `pyperclip`'s Windows backend.
+  5. Pure-Python fallback – in-memory provider used for tests and headless runners.
+- Resolution order: detect platform, probe for system binaries, then iterate through providers until
+  one succeeds; cache the winner per session. Smoke tests should skip when commands are missing while
+  verifying fallback correctness.
 
 ### Structured error model
-- Create `f2clipboard/core/errors.py` defining:
-  - `F2ClipboardError` base class.
+- Create `f2clipboard/core/errors.py` containing:
+  - `F2ClipboardError` base.
   - `ClipboardError`, `PluginLoadError`, `TokenError`, and contextual subclasses used across core and
-    CLI.
-- Introduce a JSON-friendly `Result` dataclass (`status`, `summary`, `actions`) located in
-  `f2clipboard/core/result.py`. Commands emit this payload when `--json` is passed or stdout is
-  redirected, while preserving human-readable output otherwise.
+    CLI layers.
+- Add a JSON-serialisable `Result` dataclass in `f2clipboard/core/result.py` holding `status`,
+  `summary`, and `actions`. Commands emit this structure when `--json` is passed or when stdout is
+  detected as non-tty, otherwise retain friendly prose.
 - Update CLI commands to catch domain exceptions, populate `Result`, and exit with structured
   messages for automation consumers.
 
 ## 3. Security
 
-- Centralise secret redaction in `f2clipboard/core/redaction.py`, exposing helpers to scrub strings
-  before logging, summarisation, or CLI printing. Maintain blocklists for PATs, bearer tokens,
-  credentialed URLs, SSH keys, and plugin-declared secret patterns.
-- Expand tests with fixture-driven cases that feed sample logs, Markdown summaries, PR comments, and
-  diff payloads through the redactor, asserting zero leakage in console output or returned data.
-- Guarantee that all LLM-bound text (summaries, patch prompts, plugin payloads) flows through the
-  redactor and add assertions verifying sanitised transcripts during tests.
+- Centralise secret redaction in `f2clipboard/core/redaction.py`, wrapping logging, summarisation, and
+  CLI output helpers. Maintain blocklists for PATs, bearer tokens, credentialed URLs, and SSH key
+  material, with plugin-provided patterns merged in.
+- Build fixture-driven tests that feed representative logs, Markdown summaries, PR comments, and diff
+  payloads through the redactor, asserting no secret leaks in console output or returned values.
+- Ensure all LLM-bound text (summaries, patch prompts, plugin payloads) passes through the redactor
+  and add assertions that sanitised transcripts reach the model layer.
 
 ## 4. Docs & DX
 
-- Publish parallel usage snippets comparing `f2clipboard codex-task …` and `f2clipboard files …`,
-  including examples that pipe `--json` responses into utilities like `jq` once the structured result
-  format lands.
-- Author `docs/plugins/authoring.md` describing entry-point metadata, lifecycle hooks, sample tests,
-  and publishing tips (PyPI classifiers, semantic versioning, changelog expectations).
-- Document `pipx install f2clipboard` in README: installation, cache directories, upgrade (`pipx
-  upgrade f2clipboard`), and uninstall steps.
-- Ship shell completion scripts via `f2clipboard cli install-completion` (Bash, Zsh, Fish). Add
-  activation instructions to README and surface the command in `--help`.
+- Provide side-by-side command samples for `f2clipboard codex-task …` and `f2clipboard files …`,
+  including piping `--json` responses into tools such as `jq` once structured output lands.
+- Author a plugin guide under `docs/plugins/authoring.md` covering discovery metadata, lifecycle
+  hooks, testing strategies, and PyPI distribution playbooks.
+- Document the `pipx install f2clipboard` workflow in the README, detailing the pipx cache location,
+  upgrade (`pipx upgrade f2clipboard`), and uninstall steps.
+- Ship shell completion scripts (Bash, Zsh, Fish) via `f2clipboard cli install-completion` and note
+  activation steps in the README.
 
 ## 5. Orthogonality guide
 
-- Treat polish tasks as the default when addressing:
-  - CLI ergonomics (missing flags, inconsistent help text, confusing defaults).
-  - Plugin API scaffolding or registry hardening.
-  - Security guardrails (redaction breadth, token gating).
+- Choose a polish task when addressing:
+  - CLI ergonomics (missing flags, inconsistent help, confusing defaults).
+  - Plugin API scaffolding, registry resilience, or clipboard provider coverage.
+  - Security guardrails such as redaction breadth or token gating.
   - Documentation or DX gaps discovered during weekly workflows.
-- Reserve feature/fix work for efforts that introduce new command surfaces, add first-party plugin
-  functionality, or remediate regressions validated by failing tests or bug reports.
+- Reserve feature/fix work for net-new surfaces, first-party plugin additions, or regressions proven
+  by failing tests.
