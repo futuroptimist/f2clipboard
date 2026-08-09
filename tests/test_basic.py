@@ -24,6 +24,7 @@ def test_cli_help():
         ],
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 0
     assert "Usage" in result.stdout
@@ -41,6 +42,7 @@ def test_cli_version():
         ],
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 0
     assert __version__ in result.stdout

@@ -60,9 +60,9 @@ def _collect_modified_files(repo: Path) -> list[str]:
     proc = subprocess.run(
         ["git", "status", "--porcelain", "-z"],
         cwd=repo,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         text=True,
+        check=False,
     )
     if proc.returncode != 0:
         message = proc.stderr.strip() or "git status failed"
@@ -73,7 +73,7 @@ def _collect_modified_files(repo: Path) -> list[str]:
 def _run_command(args: Iterable[str], cwd: Path) -> int:
     """Run a subprocess returning its exit code."""
 
-    result = subprocess.run(list(args), cwd=cwd)
+    result = subprocess.run(list(args), cwd=cwd, check=False)
     return result.returncode
 
 

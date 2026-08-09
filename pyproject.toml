@@ -21,10 +21,10 @@ dev = [
     "pre-commit",
     "pytest",
     "pytest-recording",
-    "ruff",
-    "flake8",
-    "black",
-    "isort",
+    "ruff==0.16.2",
+    "flake8==7.3.0",
+    "black==26.5.1",
+    "isort==8.0.1",
     "pyyaml",
 ]
 
@@ -42,6 +42,20 @@ markers = [
 
 [tool.isort]
 profile = "black"
+
+[tool.ruff.lint]
+ignore = [
+    # typer's documented CLI pattern is a call in the argument default
+    # (`typer.Option(...)`); it has no side effects and runs once at
+    # definition time, so this doesn't apply to how this codebase uses it.
+    "B008",
+    # Several call sites intentionally catch a broad Exception as a last-
+    # resort fallback (LLM API calls, plugin loading, diff formatting) and
+    # already log or otherwise handle it; narrowing these would require
+    # enumerating every possible httpx/pydantic/plugin exception type for
+    # no behavioral benefit.
+    "BLE001",
+]
 
 [tool.black]
 line-length = 88
