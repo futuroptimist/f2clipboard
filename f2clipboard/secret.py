@@ -49,10 +49,10 @@ def redact_secrets(text: str) -> str:
             return "github_pat_REDACTED"
         if token.startswith("sk-"):
             return "sk-REDACTED"
-        if token.startswith("xox") or token.startswith("xapp"):
+        if token.startswith(("xox", "xapp")):
             prefix = token.split("-", 1)[0]
             return f"{prefix}-REDACTED"
-        if token.startswith("AKIA") or token.startswith("ASIA"):
+        if token.startswith(("AKIA", "ASIA")):
             return f"{token[:4]}_REDACTED"
         if token.lower().startswith("bearer "):
             return "Bearer ***"

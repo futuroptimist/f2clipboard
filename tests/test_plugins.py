@@ -19,7 +19,6 @@ def plugin(app):
     @app.command("hello")
     def hello_cmd() -> None:  # pragma: no cover - invoked via Typer
         """Dummy plugin command."""
-        pass
 
 
 def test_plugin_loaded(monkeypatch):

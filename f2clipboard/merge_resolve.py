@@ -8,10 +8,8 @@ import subprocess
 from enum import Enum
 from pathlib import Path
 
-import click
 import httpx
 import typer
-from click.core import ParameterSource
 
 from .config import Settings
 from .llm import generate_conflict_patch
@@ -35,9 +33,9 @@ def _git_status(repo: Path) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         ["git", "status", "--porcelain"],
         cwd=repo,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         text=True,
+        check=False,
     )
 
 
@@ -71,9 +69,9 @@ def _collect_conflict_diff(repo: Path) -> str | None:
     diff = subprocess.run(
         ["git", "--no-pager", "diff", "--diff-filter=U"],
         cwd=repo,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         text=True,
+        check=False,
     )
     if diff.returncode != 0:
         message = diff.stderr.strip() or "git diff failed"
@@ -123,6 +121,7 @@ def _apply_patch_suggestion(
     retry = subprocess.run(
         ["git", "merge", "--no-commit", "-X", strategy.value, base],
         cwd=repo,
+        check=False,
     )
     if retry.returncode == 0:
         typer.echo("Merge succeeded on retry without needing the patch.")
@@ -133,8 +132,8 @@ def _apply_patch_suggestion(
         cwd=repo,
         input=cleaned_patch,
         text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
+        check=False,
     )
     if apply_proc.returncode != 0:
         message = apply_proc.stderr.strip() or "git apply failed"
@@ -142,7 +141,7 @@ def _apply_patch_suggestion(
             f"Failed to apply suggested patch automatically: {message}",
             err=True,
         )
-        abort = subprocess.run(["git", "merge", "--abort"], cwd=repo)
+        abort = subprocess.run(["git", "merge", "--abort"], cwd=repo, check=False)
         if abort.returncode != 0:
             typer.echo(
                 "Failed to abort merge automatically; resolve the repository state manually.",
@@ -153,9 +152,9 @@ def _apply_patch_suggestion(
     stage = subprocess.run(
         ["git", "add", "-A"],
         cwd=repo,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         text=True,
+        check=False,
     )
     if stage.returncode != 0:
         message = stage.stderr.strip() or "git add failed"
@@ -163,7 +162,7 @@ def _apply_patch_suggestion(
             f"Failed to stage patched changes automatically: {message}",
             err=True,
         )
-        abort = subprocess.run(["git", "merge", "--abort"], cwd=repo)
+        abort = subprocess.run(["git", "merge", "--abort"], cwd=repo, check=False)
         if abort.returncode != 0:
             typer.echo(
                 "Failed to abort merge automatically; resolve the repository state manually.",
@@ -184,6 +183,7 @@ def _attempt_merge(
     result = subprocess.run(
         ["git", "merge", "--no-commit", "-X", strategy.value, base],
         cwd=repo,
+        check=False,
     )
     if result.returncode == 0:
         return True, None
@@ -193,7 +193,7 @@ def _attempt_merge(
         err=True,
     )
     conflict_diff = _collect_conflict_diff(repo)
-    abort = subprocess.run(["git", "merge", "--abort"], cwd=repo)
+    abort = subprocess.run(["git", "merge", "--abort"], cwd=repo, check=False)
     if abort.returncode != 0:
         typer.echo(
             "Failed to abort merge automatically; resolve the repository state manually.",
@@ -286,9 +286,9 @@ def _get_remote_slug(repo: Path) -> tuple[str, str]:
     result = subprocess.run(
         ["git", "config", "--get", "remote.origin.url"],
         cwd=repo,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         text=True,
+        check=False,
     )
     if result.returncode != 0:
         message = result.stderr.strip() or "Could not read origin remote URL"
@@ -350,6 +350,7 @@ def _checkout_pr_branch(repo: Path, number: int) -> str:
     fetch = subprocess.run(
         ["git", "fetch", "--force", "origin", f"pull/{number}/head:{branch}"],
         cwd=repo,
+        check=False,
     )
     if fetch.returncode != 0:
         typer.echo(
@@ -358,7 +359,7 @@ def _checkout_pr_branch(repo: Path, number: int) -> str:
         )
         raise typer.Exit(code=fetch.returncode or 1)
 
-    checkout = subprocess.run(["git", "checkout", branch], cwd=repo)
+    checkout = subprocess.run(["git", "checkout", branch], cwd=repo, check=False)
     if checkout.returncode != 0:
         typer.echo(
             f"Failed to check out fetched branch '{branch}' (exit code {checkout.returncode}).",
@@ -408,6 +409,7 @@ def _post_pr_comment(
 
 
 def merge_resolve_command(
+    ctx: typer.Context,
     base: str | None = typer.Option(
         None,
         "--base",
@@ -447,11 +449,15 @@ def merge_resolve_command(
     repo = repo.resolve()
     _ensure_clean_worktree(repo)
 
-    ctx = click.get_current_context(silent=True)
-    base_provided = False
-    if ctx is not None:
-        base_source = ctx.get_parameter_source("base")
-        base_provided = base_source not in (None, ParameterSource.DEFAULT)
+    # Compare by name, not identity: typer vendors its own internal fork of
+    # click (typer._click), so a directly-imported click.core.ParameterSource
+    # is a *different* enum class than what ctx.get_parameter_source actually
+    # returns here, and `in (..., ParameterSource.DEFAULT)` would silently
+    # always be False no matter what -- either always treating --base as
+    # provided, or (with the standalone click.get_current_context() lookup
+    # this replaced) never finding a context at all.
+    base_source = ctx.get_parameter_source("base")
+    base_provided = base_source is not None and base_source.name != "DEFAULT"
 
     merge_base = base if base is not None else None
 

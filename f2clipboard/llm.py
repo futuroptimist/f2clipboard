@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 import httpx
 
 from .config import Settings
@@ -67,9 +69,9 @@ async def summarise_log(text: str, settings: Settings) -> str:
             return await _summarise_anthropic(
                 text, settings.anthropic_api_key, settings.anthropic_model
             )
-    except Exception:
+    except Exception as exc:
         # Fall back to truncation on any API error
-        pass
+        logging.getLogger(__name__).warning("LLM summary request failed: %s", exc)
     return text[:100] + "\n…\n"
 
 
