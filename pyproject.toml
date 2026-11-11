@@ -24,7 +24,7 @@ dev = [
     "ruff==0.16.2",
     "flake8==7.3.0",
     "black==26.5.1",
-    "isort==8.0.1",
+    "isort==9.0.2",
     "pyyaml",
 ]
 
