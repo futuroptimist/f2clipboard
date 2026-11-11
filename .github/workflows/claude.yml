@@ -112,7 +112,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout trusted workflow revision
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.workflow_sha }}
           persist-credentials: false
@@ -124,7 +124,7 @@ jobs:
           sudo install -o root -g root -m 0555 trusted-workflow/.github/scripts/claude-validate.sh /usr/local/bin/f2clipboard-claude-validate
 
       - name: Checkout same-repository PR commit
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.authorize.outputs.head_sha }}
           persist-credentials: false
@@ -204,7 +204,7 @@ jobs:
           fi
 
       - name: Checkout trusted workflow revision
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.workflow_sha }}
           persist-credentials: false
@@ -216,7 +216,7 @@ jobs:
           sudo install -o root -g root -m 0555 trusted-workflow/.github/scripts/claude-validate.sh /usr/local/bin/f2clipboard-claude-validate
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           fetch-tags: true
