@@ -131,7 +131,7 @@ jobs:
           path: pr-workspace
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@v1
+        uses: astral-sh/setup-uv@v7
 
       - name: Setup Python
         uses: actions/setup-python@v7
@@ -223,7 +223,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@v1
+        uses: astral-sh/setup-uv@v7
 
       - name: Setup Python
         uses: actions/setup-python@v7
