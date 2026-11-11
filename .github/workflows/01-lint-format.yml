@@ -4,12 +4,12 @@ jobs:
   lint-format:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v1
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      - run: uv pip install --system flake8==7.3.0 black==26.5.1 isort==8.0.1
+      - run: uv pip install --system flake8==7.3.0 black==26.5.1 isort==9.0.2
       - run: |
           flake8 .
           isort --check-only .
